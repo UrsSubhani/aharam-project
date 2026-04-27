@@ -1,9 +1,15 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home2/innovx5x/public_html/
+    - export DEPLOYPATH=/home2/innovx5x/public_html
 
-    - /bin/cp -R customer-app $DEPLOYPATH
+    # Clean old files (important)
+    - /bin/rm -rf $DEPLOYPATH/*
+
+    # Copy customer app to root
+    - /bin/cp -R customer-app/. $DEPLOYPATH
+
+    # Copy other apps
     - /bin/cp -R admin-panel $DEPLOYPATH
     - /bin/cp -R restaurant-panel $DEPLOYPATH
     - /bin/cp -R delivery-app $DEPLOYPATH
