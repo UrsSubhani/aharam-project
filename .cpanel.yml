@@ -3,6 +3,8 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home2/innovx5x/public_html
 
+    - /bin/mkdir -p $DEPLOYPATH
+
     - /bin/cp -R customer-app/* $DEPLOYPATH
     - /bin/cp -R admin-panel $DEPLOYPATH
     - /bin/cp -R restaurant-panel $DEPLOYPATH
