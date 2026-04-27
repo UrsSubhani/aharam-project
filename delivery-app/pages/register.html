@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rider Registration — Aharam</title>
+  <link rel="stylesheet" href="../css/delivery.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    body { background: linear-gradient(135deg,#1a1a2e,#16213e); min-height:100vh; display:flex; justify-content:center; align-items:flex-start; padding:24px 16px; }
+    .card { background:#fff; border-radius:16px; padding:32px 28px; width:min(460px,100%); box-shadow:0 20px 60px rgba(0,0,0,.35); }
+    .logo { font-size:24px; font-weight:800; color:#ff5722; text-align:center; margin-bottom:4px; }
+    .sub  { text-align:center; color:#777; font-size:14px; margin-bottom:24px; }
+    .step-indicator { display:flex; gap:8px; margin-bottom:24px; }
+    .step-dot { flex:1; height:4px; border-radius:2px; background:#eee; transition:.3s; }
+    .step-dot.active { background:#ff5722; }
+    .step-dot.done   { background:#4caf50; }
+    .step { display:none; }
+    .step.active { display:block; }
+    .step-title { font-size:16px; font-weight:700; margin-bottom:4px; }
+    .step-sub   { font-size:13px; color:#777; margin-bottom:20px; }
+    .form-group { margin-bottom:14px; }
+    .form-label { display:block; font-size:13px; font-weight:600; margin-bottom:5px; color:#333; }
+    .form-input, .form-select { width:100%; padding:11px 14px; border:1px solid #e0e0e0; border-radius:8px; font-size:14px; font-family:inherit; outline:none; transition:border .2s; box-sizing:border-box; }
+    .form-input:focus, .form-select:focus { border-color:#ff5722; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .btn-primary { width:100%; padding:13px; background:#ff5722; color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; margin-top:8px; transition:opacity .2s; }
+    .btn-primary:hover { opacity:.9; }
+    .btn-primary:disabled { opacity:.6; cursor:not-allowed; }
+    .btn-outline { width:100%; padding:11px; background:transparent; color:#ff5722; border:2px solid #ff5722; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit; margin-top:8px; }
+    .err-msg { color:#f44336; font-size:13px; background:#ffebee; padding:9px 12px; border-radius:6px; margin-bottom:12px; display:none; }
+    .vehicle-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:14px; }
+    .vehicle-btn { padding:14px 10px; border:2px solid #e0e0e0; border-radius:10px; text-align:center; cursor:pointer; background:#fff; font-family:inherit; transition:.2s; }
+    .vehicle-btn:hover { border-color:#ff5722; }
+    .vehicle-btn.selected { border-color:#ff5722; background:#fff3f0; }
+    .vehicle-btn .v-icon { font-size:28px; display:block; margin-bottom:4px; }
+    .vehicle-btn .v-name { font-size:12px; font-weight:600; color:#333; }
+    .login-link { text-align:center; margin-top:16px; font-size:13px; color:#777; }
+    .login-link a { color:#ff5722; font-weight:600; text-decoration:none; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">🛵 Aharam Rider</div>
+  <p class="sub">Join as a Delivery Partner</p>
+
+  <div class="step-indicator">
+    <div class="step-dot active" id="dot1"></div>
+    <div class="step-dot" id="dot2"></div>
+    <div class="step-dot" id="dot3"></div>
+  </div>
+
+  <div id="errMsg" class="err-msg"></div>
+
+  <!-- Step 1: Account -->
+  <div class="step active" id="step1">
+    <div class="step-title">Create your account</div>
+    <div class="step-sub">Step 1 of 3 — Basic details</div>
+    <div class="form-group">
+      <label class="form-label">Full Name</label>
+      <input type="text" class="form-input" id="name" placeholder="Your full name" required/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Phone Number</label>
+      <input type="tel" class="form-input" id="phone" placeholder="10-digit mobile number" maxlength="10"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <input type="email" class="form-input" id="email" placeholder="you@example.com"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="password" placeholder="Min 6 characters"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">City</label>
+        <select class="form-select" id="city">
+          <option value="">Select City</option>
+          <option>Chennai</option>
+          <option>Hyderabad</option>
+          <option>Bangalore</option>
+          <option>Coimbatore</option>
+          <option>Madurai</option>
+          <option>Vinukonda</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-primary" id="step1Btn" onclick="goStep2()">Continue →</button>
+    <div class="login-link">Already registered? <a href="../login.html">Sign In</a></div>
+  </div>
+
+  <!-- Step 2: Vehicle -->
+  <div class="step" id="step2">
+    <div class="step-title">Your vehicle</div>
+    <div class="step-sub">Step 2 of 3 — Choose your vehicle type</div>
+    <div class="vehicle-grid">
+      <button class="vehicle-btn" data-vehicle="bicycle"  onclick="selectVehicle(this)"><span class="v-icon">🚲</span><span class="v-name">Bicycle</span></button>
+      <button class="vehicle-btn" data-vehicle="scooter"  onclick="selectVehicle(this)"><span class="v-icon">🛵</span><span class="v-name">Scooter</span></button>
+      <button class="vehicle-btn" data-vehicle="motorbike" onclick="selectVehicle(this)"><span class="v-icon">🏍</span><span class="v-name">Motorbike</span></button>
+      <button class="vehicle-btn" data-vehicle="car"      onclick="selectVehicle(this)"><span class="v-icon">🚗</span><span class="v-name">Car</span></button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Vehicle Number</label>
+        <input type="text" class="form-input" id="vehicleNumber" placeholder="TN01AB1234"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">License Number</label>
+        <input type="text" class="form-input" id="licenseNumber" placeholder="DL number"/>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="goStep3()">Continue →</button>
+    <button class="btn-outline" onclick="goTo(1)">← Back</button>
+  </div>
+
+  <!-- Step 3: Documents -->
+  <div class="step" id="step3">
+    <div class="step-title">Final details</div>
+    <div class="step-sub">Step 3 of 3 — Identity & bank details</div>
+    <div class="form-group">
+      <label class="form-label">Aadhaar Number</label>
+      <input type="text" class="form-input" id="aadharNumber" placeholder="12-digit Aadhaar" maxlength="12"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bank Account Number <span style="color:#aaa;font-weight:400">(optional)</span></label>
+      <input type="text" class="form-input" id="bankAccount" placeholder="Account number for payouts"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">IFSC Code <span style="color:#aaa;font-weight:400">(optional)</span></label>
+        <input type="text" class="form-input" id="ifscCode" placeholder="IFSC code"/>
+      </div>
+      <div class="form-group" style="display:flex;align-items:flex-end">
+        <div style="background:#fff3e0;border-radius:8px;padding:10px;font-size:12px;color:#e65100;width:100%">
+          🔒 Your data is encrypted and secure
+        </div>
+      </div>
+    </div>
+    <button class="btn-primary" id="submitBtn" onclick="submitRegistration()">Submit Application 🎉</button>
+    <button class="btn-outline" onclick="goTo(2)">← Back</button>
+  </div>
+
+</div>
+
+<script src="../js/api-delivery.js"></script>
+<script>
+let selectedVehicle = '';
+let regToken = null;
+
+function showErr(msg) {
+  const el = document.getElementById('errMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth' });
+}
+function hideErr() { document.getElementById('errMsg').style.display = 'none'; }
+
+function goTo(n) {
+  hideErr();
+  document.querySelectorAll('.step').forEach((s, i) => s.classList.toggle('active', i === n - 1));
+  ['dot1','dot2','dot3'].forEach((id, i) => {
+    const dot = document.getElementById(id);
+    dot.className = 'step-dot' + (i < n - 1 ? ' done' : i === n - 1 ? ' active' : '');
+  });
+}
+
+function selectVehicle(btn) {
+  document.querySelectorAll('.vehicle-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedVehicle = btn.dataset.vehicle;
+}
+
+async function goStep2() {
+  hideErr();
+  const name  = document.getElementById('name').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const pass  = document.getElementById('password').value;
+  const city  = document.getElementById('city').value;
+
+  if (!name || !phone || !email || !pass || !city) { showErr('Please fill all fields.'); return; }
+  if (phone.length !== 10 || !/^\d+$/.test(phone)) { showErr('Enter a valid 10-digit phone number.'); return; }
+  if (pass.length < 6) { showErr('Password must be at least 6 characters.'); return; }
+
+  const btn = document.getElementById('step1Btn');
+  btn.disabled = true; btn.textContent = 'Creating account…';
+
+  const res = await Api.auth.register({ name, phone, email, password: pass, role: 'delivery_partner' });
+  btn.disabled = false; btn.textContent = 'Continue →';
+
+  if (!res?.success) { showErr(res?.message || 'Registration failed.'); return; }
+
+  // Save token temporarily to make profile call later
+  regToken = res.data.token;
+  localStorage.setItem('aharam_rider_token', regToken);
+  localStorage.setItem('aharam_rider_user', JSON.stringify(res.data.user));
+
+  goTo(2);
+}
+
+function goStep3() {
+  hideErr();
+  if (!selectedVehicle) { showErr('Please select your vehicle type.'); return; }
+  const vNum = document.getElementById('vehicleNumber').value.trim();
+  const lNum = document.getElementById('licenseNumber').value.trim();
+  if (!vNum || !lNum) { showErr('Please enter vehicle number and license number.'); return; }
+  goTo(3);
+}
+
+async function submitRegistration() {
+  hideErr();
+  const aadhar = document.getElementById('aadharNumber').value.trim();
+  if (!aadhar || aadhar.length !== 12 || !/^\d+$/.test(aadhar)) {
+    showErr('Enter a valid 12-digit Aadhaar number.'); return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+
+  const res = await Api.delivery.setupProfile({
+    vehicle_type:   selectedVehicle,
+    vehicle_number: document.getElementById('vehicleNumber').value.trim(),
+    license_number: document.getElementById('licenseNumber').value.trim(),
+    aadhar_number:  aadhar,
+    city:           document.getElementById('city').value,
+    bank_account:   document.getElementById('bankAccount').value.trim() || null,
+    ifsc_code:      document.getElementById('ifscCode').value.trim() || null,
+  });
+
+  btn.disabled = false; btn.textContent = 'Submit Application 🎉';
+
+  if (res?.success) {
+    window.location.href = '../index.html';
+  } else {
+    showErr(res?.message || 'Failed to submit profile. Please try again.');
+  }
+}
+</script>
+</body>
+</html>

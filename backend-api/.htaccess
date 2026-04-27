@@ -1,0 +1,66 @@
+# ============================================================
+# AHARAM BACKEND API — Apache URL Rewrite Rules
+# ============================================================
+# Routes all requests through index.php (Front Controller pattern)
+# Compatible with Apache 2.4+ on shared hosting (BigRock/cPanel)
+# ============================================================
+
+Options -Indexes
+Options -MultiViews
+
+RewriteEngine On
+
+# Set base path if API lives in a subdirectory
+# Uncomment and adjust if needed:
+# RewriteBase /aharam/backend-api/
+
+# ── Security headers ──────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    # Remove server fingerprint
+    Header unset X-Powered-By
+    Header unset Server
+</IfModule>
+
+# ── Block direct access to sensitive files ────────────────────
+<FilesMatch "\.(env|json|lock|md|sql|log|sh|xml|yaml|yml)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Block access to internal PHP directories via FilesMatch
+<FilesMatch "^(config|services|models|middlewares|utils|cron)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
+
+# ── Route all requests to index.php ──────────────────────────
+# Pass Authorization header through (needed for JWT / Bearer tokens)
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# ── Enable GZIP compression ───────────────────────────────────
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE text/plain
+</IfModule>
+
+# ── PHP settings (shared hosting) ────────────────────────────
+<IfModule mod_php.c>
+    php_value upload_max_filesize 5M
+    php_value post_max_size 10M
+    php_value max_execution_time 60
+    php_value memory_limit 128M
+</IfModule>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aharam — Order Food Online</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- ── HEADER ─────────────────────────────────────────────── -->
+<header class="header" id="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">🍽</span> <span data-pname>Aharam</span>
+    </a>
+
+    <div class="location-bar" id="locationBar">
+      <span class="location-icon">📍</span>
+      <span id="currentCity">Select City</span>
+      <span class="chevron">▾</span>
+    </div>
+
+    <nav class="header-nav">
+      <a href="#" class="nav-link" id="cartNavBtn">
+        🛒 Cart <span class="badge" id="cartBadge">0</span>
+      </a>
+      <div id="authSection">
+        <a href="pages/login.html" class="btn btn-outline">Login</a>
+        <a href="pages/register.html" class="btn btn-primary">Sign Up</a>
+      </div>
+      <div id="userSection" style="display:none;align-items:center;gap:12px">
+        <a href="pages/orders.html" class="nav-link">My Orders</a>
+        <div class="user-menu">
+          <button class="btn btn-outline" id="userMenuBtn">
+            👤 <span id="userName">Me</span> ▾
+          </button>
+          <div class="dropdown" id="userDropdown">
+            <a href="pages/profile.html">Profile</a>
+            <a href="pages/wallet.html">💳 Wallet</a>
+            <a href="pages/profile.html#plus" id="plusNavLink" style="color:#ff5722;font-weight:600">💎 Aharam Plus</a>
+            <a href="pages/orders.html">My Orders</a>
+            <a href="#" id="logoutBtn">Logout</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<!-- ── HERO ───────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="container">
+    <h1>Craving something? <br/><span class="highlight">We got you.</span></h1>
+    <p class="hero-sub">Authentic home kitchens, street food & restaurants — delivered fast.</p>
+
+    <div class="search-bar">
+      <div class="search-city">
+        <span>📍</span>
+        <select id="citySelect">
+          <option value="">All Cities</option>
+        </select>
+      </div>
+      <input type="text" id="searchInput" placeholder="Search restaurants, dishes..." class="search-input"/>
+      <button class="btn btn-primary search-btn" id="searchBtn">Search</button>
+    </div>
+  </div>
+</section>
+
+<!-- ── OFFERS STRIP ───────────────────────────────────────── -->
+<section class="offers-strip">
+  <div class="container">
+    <div class="offer-pill">🎉 FIRST50 — ₹50 off your first order</div>
+    <div class="offer-pill" id="freeDeliveryPill">🚀 Free delivery above ₹299</div>
+    <div class="offer-pill">💎 Aharam Plus: Unlimited free delivery @ ₹99/month</div>
+    <div class="offer-pill">🏪 Low commission for restaurants — more savings for you!</div>
+  </div>
+</section>
+
+<!-- ── CUISINE FILTERS ───────────────────────────────────── -->
+<section class="cuisine-filter-section">
+  <div class="container">
+    <div class="cuisine-chips" id="cuisineChips">
+      <button class="cuisine-chip active" data-cuisine="">🍽 All</button>
+      <button class="cuisine-chip" data-cuisine="South Indian">🥘 South Indian</button>
+      <button class="cuisine-chip" data-cuisine="North Indian">🍛 North Indian</button>
+      <button class="cuisine-chip" data-cuisine="Chinese">🥡 Chinese</button>
+      <button class="cuisine-chip" data-cuisine="Biryani">🍚 Biryani</button>
+      <button class="cuisine-chip" data-cuisine="Fast Food">🍔 Fast Food</button>
+      <button class="cuisine-chip" data-cuisine="Snacks">🍟 Snacks</button>
+      <button class="cuisine-chip" data-cuisine="Desserts">🍰 Desserts</button>
+      <button class="cuisine-chip" data-cuisine="Beverages">🥤 Beverages</button>
+    </div>
+  </div>
+</section>
+
+<!-- ── ALL RESTAURANTS ───────────────────────────────────── -->
+<section class="section" style="padding-top:8px">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">All Restaurants</h2>
+      <div class="sort-bar">
+        <span style="font-size:13px;color:#777;font-weight:500;margin-right:8px">Sort by:</span>
+        <div class="sort-pills" id="sortPills">
+          <button class="sort-pill active" data-val="avg_rating">⭐ Rating</button>
+          <button class="sort-pill" data-val="avg_delivery_time">⚡ Fastest</button>
+          <button class="sort-pill" data-val="min_order_amount">💰 Low Minimum</button>
+        </div>
+        <select id="sortSelect" style="display:none">
+          <option value="avg_rating">Rating</option>
+          <option value="avg_delivery_time">Fastest</option>
+          <option value="min_order_amount">Low Minimum</option>
+        </select>
+      </div>
+    </div>
+    <div class="restaurant-grid" id="restaurantGrid">
+      <div class="loading-spinner">Loading restaurants...</div>
+    </div>
+    <div class="load-more-wrap">
+      <button class="btn btn-outline" id="loadMoreBtn" style="display:none">Load More</button>
+    </div>
+  </div>
+</section>
+
+<!-- ── TRENDING ITEMS ────────────────────────────────────── -->
+<section class="section bg-light">
+  <div class="container">
+    <h2 class="section-title">🔥 Trending Near You</h2>
+    <div class="items-scroll" id="trendingGrid">
+      <!-- Loaded by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ── WHY AHARAM ─────────────────────────────────────────── -->
+<section class="section why-section">
+  <div class="container">
+    <h2 class="section-title center">Why Aharam?</h2>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon">🏠</div>
+        <h3>Home Kitchens</h3>
+        <p>Authentic home-cooked food from local home chefs</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">💰</div>
+        <h3>Lowest Prices</h3>
+        <p>Low commission means restaurants pass savings to you</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">⚡</div>
+        <h3>Fast Delivery</h3>
+        <p>Hyperlocal delivery — order from your neighbourhood</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">📊</div>
+        <h3>Transparent Pricing</h3>
+        <p>See exactly what you pay — food cost, delivery, taxes</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CITY SELECT MODAL ──────────────────────────────────── -->
+<div class="modal" id="cityModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Select Your City</h3>
+      <button class="modal-close" id="closeCityModal">✕</button>
+    </div>
+    <div class="city-list" id="cityList">
+      <button class="city-btn" data-city="">All Cities</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="logo">🍽 <span data-pname>Aharam</span></div>
+        <p>Connecting hungry people with great local food since 2024.</p>
+      </div>
+      <div>
+        <h4>For Restaurants</h4>
+        <a href="/aharam/restaurant-panel/index.html">Partner with us</a>
+        <a href="/aharam/restaurant-panel/index.html#subscription">Low commission plans</a>
+      </div>
+      <div>
+        <h4>For Riders</h4>
+        <a href="/aharam/delivery-app/pages/register.html">Deliver with Aharam</a>
+        <span style="display:block;font-size:13px;color:#aaa;margin-bottom:6px">Flexible working hours</span>
+      </div>
+      <div>
+        <h4>Support</h4>
+        <a id="footerEmail" href="mailto:customersupport@aharam.in">customersupport@aharam.in</a>
+        <a id="footerPhone" href="tel:1478523698">1478523698</a>
+        <a id="footerWhatsapp" href="https://wa.me/911478523698" target="_blank">Chat on WhatsApp</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 <span data-pname>Aharam</span>. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/platform.js"></script>
+<script src="js/app.js"></script>
+<script>
+(async () => {
+  const res = await Api.get('/settings/public');
+  const s   = res?.data || {};
+  if (s.support_email) {
+    const el = document.getElementById('footerEmail');
+    el.href        = 'mailto:' + s.support_email;
+    el.textContent = s.support_email;
+  }
+  if (s.support_phone) {
+    const el = document.getElementById('footerPhone');
+    el.href        = 'tel:' + s.support_phone;
+    el.textContent = s.support_phone;
+  }
+  if (s.support_whatsapp) {
+    document.getElementById('footerWhatsapp').href = 'https://wa.me/' + s.support_whatsapp;
+  }
+  if (s.free_delivery_above) {
+    document.getElementById('freeDeliveryPill').textContent = `🚀 Free delivery above ₹${s.free_delivery_above}`;
+  }
+  // Hide Aharam Plus nav link and offer pill if plan is disabled
+  if ((s.customer_plan_active ?? '1') === '0') {
+    const link = document.getElementById('plusNavLink');
+    if (link) link.style.display = 'none';
+    const pill = document.querySelector('.offer-pill:nth-child(3)');
+    if (pill) pill.style.display = 'none';
+  } else if (s.customer_plan_name || s.customer_plan_price) {
+    const pill = document.querySelector('.offer-pill:nth-child(3)');
+    if (pill) pill.textContent = `💎 ${s.customer_plan_name || 'Aharam Plus'}: Unlimited free delivery @ ₹${s.customer_plan_price || 99}/month`;
+  }
+})();
+</script>
+</body>
+</html>

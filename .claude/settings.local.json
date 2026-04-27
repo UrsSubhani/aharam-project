@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(cmd /c \"dir C:\\\\xampp\\\\mysql\\\\data\\\\ /b\" 2>&1)",
+      "PowerShell(cmd /c \"dir C:\\\\xampp\\\\mysql\\\\data\\\\aharam_db\\\\ /b\" 2>&1)",
+      "PowerShell(& \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root --host=127.0.0.1 --port=3306 -e \"SHOW DATABASES;\" 2>&1)",
+      "PowerShell(cmd /c '\"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root --host=127.0.0.1 --port=3307 aharam_db < \"C:\\\\xampp\\\\htdocs\\\\aharam\\\\database\\\\schema.sql\"' 2>&1)",
+      "PowerShell($r = Invoke-RestMethod -Uri \"http://localhost/aharam/backend-api/login\" -Method POST -ContentType \"application/json\" -Body '{\"email\":\"rajesh@delivery.in\",\"password\":\"password\"}'; $token = $r.data.token; $me = Invoke-WebRequest -Uri \"http://localhost/aharam/backend-api/me\" -Headers @{Authorization=\"Bearer $token\"}; Write-Host $me.Content)",
+      "PowerShell(cmd /c '\"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root --host=127.0.0.1 --port=3307 aharam_db -e \"SHOW COLUMNS FROM restaurants; SHOW COLUMNS FROM delivery_partners;\"' 2>&1)"
+    ]
+  }
+}

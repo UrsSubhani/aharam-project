@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register — Aharam</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<div class="auth-container">
+  <div class="auth-box">
+    <div class="auth-logo">🍽 <span data-pname>Aharam</span></div>
+    <div class="auth-title">Create Account</div>
+    <div class="auth-subtitle">Order from the best local food near you</div>
+
+    <form id="registerForm">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-control" id="regName" placeholder="Your name" required/>
+        <div class="form-error" id="regNameErr"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-control" id="regEmail" placeholder="you@example.com" required/>
+        <div class="form-error" id="regEmailErr"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input type="tel" class="form-control" id="regPhone" placeholder="10-digit mobile number" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" required/>
+        <div class="form-error" id="regPhoneErr"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-control" id="regPassword" placeholder="Min 8 characters" required/>
+        <div class="form-error" id="regPasswordErr"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">I am registering as</label>
+        <select class="form-control" id="regRole">
+          <option value="customer">Customer — Order food</option>
+          <option value="restaurant_owner">Restaurant / Home Kitchen</option>
+          <option value="delivery_partner">Delivery Partner</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="refGroup">
+        <label class="form-label">Referral Code <span style="color:#aaa;font-weight:400">(optional)</span></label>
+        <div style="position:relative">
+          <input type="text" class="form-control" id="regRef" placeholder="e.g. RAHUL42" style="text-transform:uppercase;padding-right:90px" autocomplete="off"/>
+          <span id="refBadge" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#22c55e;color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px">✓ Applied</span>
+        </div>
+      </div>
+
+      <div id="regError" class="form-error" style="margin-bottom:12px"></div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg" id="regBtn">Create Account</button>
+    </form>
+
+    <div class="auth-footer">
+      Already have an account? <a href="login.html">Login</a>
+    </div>
+    <p style="font-size:12px;color:#aaa;text-align:center;margin-top:12px">
+      By signing up you agree to our Terms of Service &amp; Privacy Policy.
+    </p>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/platform.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (Auth.isLoggedIn()) {
+    window.location.href = '../index.html';
+    return;
+  }
+
+  // Auto-fill referral code from URL ?ref=CODE
+  const refParam = new URLSearchParams(location.search).get('ref');
+  if (refParam) {
+    const refInput = document.getElementById('regRef');
+    refInput.value = refParam.toUpperCase();
+    document.getElementById('refBadge').style.display = 'inline-block';
+  }
+
+  document.getElementById('regRef').addEventListener('input', function() {
+    this.value = this.value.toUpperCase();
+    document.getElementById('refBadge').style.display = this.value.trim() ? 'inline-block' : 'none';
+  });
+
+  // Only allow digits in phone field
+  document.getElementById('regPhone').addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 10);
+  });
+
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Clear previous errors
+    ['Name','Email','Phone','Password'].forEach(f =>
+      document.getElementById(`reg${f}Err`).textContent = ''
+    );
+    document.getElementById('regError').textContent = '';
+
+    // Validate phone exactly 10 digits
+    const phoneVal = document.getElementById('regPhone').value.trim();
+    if (!/^[0-9]{10}$/.test(phoneVal)) {
+      document.getElementById('regPhoneErr').textContent = 'Enter a valid 10-digit mobile number.';
+      return;
+    }
+
+    const btn  = document.getElementById('regBtn');
+    btn.disabled    = true;
+    btn.textContent = 'Creating account...';
+
+    const role    = document.getElementById('regRole').value;
+    const refCode = document.getElementById('regRef').value.trim();
+    const body    = {
+      name:     document.getElementById('regName').value.trim(),
+      email:    document.getElementById('regEmail').value.trim(),
+      phone:    document.getElementById('regPhone').value.trim(),
+      password: document.getElementById('regPassword').value,
+      role,
+    };
+    if (refCode) body.referral_code = refCode;
+    const res = await Api.auth.register(body);
+
+    btn.disabled    = false;
+    btn.textContent = 'Create Account';
+
+    if (res?.success) {
+      Auth.save(res.data.token, res.data.user);
+
+      // Redirect based on role
+      const redirectMap = {
+        customer:          '../index.html',
+        restaurant_owner:  '../../restaurant-panel/index.html',
+        delivery_partner:  '../../delivery-app/index.html',
+      };
+      window.location.href = redirectMap[role] || '../index.html';
+    } else {
+      if (res?.errors) {
+        Object.entries(res.errors).forEach(([field, msgs]) => {
+          const el = document.getElementById(`reg${field.charAt(0).toUpperCase()+field.slice(1)}Err`);
+          if (el) el.textContent = msgs[0];
+        });
+      }
+      document.getElementById('regError').textContent = res?.message || 'Registration failed.';
+    }
+  });
+});
+</script>
+</body>
+</html>

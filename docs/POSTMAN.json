@@ -1,0 +1,723 @@
+{
+  "info": {
+    "name": "Aharam Food Delivery API",
+    "description": "Complete API collection for the Aharam food delivery platform. Set {{base_url}} to http://localhost/aharam/backend-api and {{token}} to your JWT token after login.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost/aharam/backend-api", "type": "string" },
+    { "key": "token",    "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/register",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Test Customer\",\n  \"email\": \"customer@test.com\",\n  \"password\": \"Password@123\",\n  \"phone\": \"9876543210\",\n  \"role\": \"customer\"\n}" }
+          }
+        },
+        {
+          "name": "Login (Customer)",
+          "event": [{ "listen": "test", "script": { "exec": ["const r = pm.response.json();\nif (r.success) pm.collectionVariables.set('token', r.data.token);"] } }],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"customer@aharam.in\",\n  \"password\": \"Customer@123\"\n}" }
+          }
+        },
+        {
+          "name": "Login (Admin)",
+          "event": [{ "listen": "test", "script": { "exec": ["const r = pm.response.json();\nif (r.success) pm.collectionVariables.set('token', r.data.token);"] } }],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@aharam.in\",\n  \"password\": \"Admin@123\"\n}" }
+          }
+        },
+        {
+          "name": "Login (Restaurant Owner)",
+          "event": [{ "listen": "test", "script": { "exec": ["const r = pm.response.json();\nif (r.success) pm.collectionVariables.set('token', r.data.token);"] } }],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"owner@biryanihouse.com\",\n  \"password\": \"Owner@123\"\n}" }
+          }
+        },
+        {
+          "name": "Login (Delivery Partner)",
+          "event": [{ "listen": "test", "script": { "exec": ["const r = pm.response.json();\nif (r.success) pm.collectionVariables.set('token', r.data.token);"] } }],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"rider1@aharam.in\",\n  \"password\": \"Rider@123\"\n}" }
+          }
+        },
+        {
+          "name": "Me (Profile)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/me",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/logout",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restaurants",
+      "item": [
+        {
+          "name": "List Nearby Restaurants",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/restaurants?lat=13.0827&lng=80.2707&radius=10",
+              "host": ["{{base_url}}"],
+              "path": ["restaurants"],
+              "query": [
+                { "key": "lat", "value": "13.0827" },
+                { "key": "lng", "value": "80.2707" },
+                { "key": "radius", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Restaurants",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/restaurants?search=biryani",
+              "host": ["{{base_url}}"],
+              "path": ["restaurants"],
+              "query": [{ "key": "search", "value": "biryani" }]
+            }
+          }
+        },
+        {
+          "name": "Get Restaurant Detail",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/restaurants/1"
+          }
+        },
+        {
+          "name": "Create Restaurant",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/restaurants",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"My Restaurant\",\n  \"description\": \"Best food in town\",\n  \"address\": \"123 Main St\",\n  \"city\": \"Chennai\",\n  \"phone\": \"9876543211\",\n  \"cuisine_type\": \"South Indian\",\n  \"opening_time\": \"09:00\",\n  \"closing_time\": \"22:00\",\n  \"lat\": 13.0827,\n  \"lng\": 80.2707\n}" }
+          }
+        },
+        {
+          "name": "Restaurant Stats",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/restaurants/1/stats",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Menu",
+      "item": [
+        {
+          "name": "Get Menu (Grouped)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/restaurants/1/menu"
+          }
+        },
+        {
+          "name": "Get Single Item",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/menu/1"
+          }
+        },
+        {
+          "name": "Create Menu Item",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/menu",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"category_id\": 1,\n  \"name\": \"Special Biryani\",\n  \"description\": \"Chef's special\",\n  \"price\": 280,\n  \"is_veg\": false,\n  \"preparation_time\": 30\n}" }
+          }
+        },
+        {
+          "name": "Toggle Item Availability",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/menu/1/availability",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"is_available\": false }" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "View Cart",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/cart",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Add to Cart",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/cart/add",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"menu_item_id\": 1,\n  \"quantity\": 2\n}" }
+          }
+        },
+        {
+          "name": "Clear Cart",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/cart",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Place Order (COD)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/orders",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"address_id\": 1,\n  \"payment_method\": \"cod\",\n  \"special_instructions\": \"Ring the bell twice\"\n}" }
+          }
+        },
+        {
+          "name": "Place Order (Online)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/orders",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"address_id\": 1,\n  \"payment_method\": \"online\",\n  \"coupon_code\": \"WELCOME50\"\n}" }
+          }
+        },
+        {
+          "name": "Order History",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/orders",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Get Order Details",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/orders/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Track Order (Polling)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/orders/1/track"
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/orders/1/cancel",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Restaurant: Get Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/restaurants/1/orders?status=pending",
+              "host": ["{{base_url}}"],
+              "path": ["restaurants", "1", "orders"],
+              "query": [{ "key": "status", "value": "pending" }]
+            },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Restaurant: Update Order Status",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/orders/1/status",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"status\": \"confirmed\" }" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Initiate Payment",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/payments/initiate",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"order_id\": 1 }" }
+          }
+        },
+        {
+          "name": "Verify Payment",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/payments/verify",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"razorpay_order_id\": \"order_test123\",\n  \"razorpay_payment_id\": \"pay_test456\",\n  \"razorpay_signature\": \"mock_signature\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delivery Partner",
+      "item": [
+        {
+          "name": "My Active Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/delivery/my-orders?status=active",
+              "host": ["{{base_url}}"],
+              "path": ["delivery", "my-orders"],
+              "query": [{ "key": "status", "value": "active" }]
+            },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Update Delivery Status",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/delivery/1/status",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"status\": \"accepted\" }" }
+          }
+        },
+        {
+          "name": "Update GPS Location",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/delivery/location",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"lat\": 13.0827, \"lng\": 80.2707 }" }
+          }
+        },
+        {
+          "name": "Toggle Availability",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/delivery/availability",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"available\": true }" }
+          }
+        },
+        {
+          "name": "Delivery History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/delivery/my-orders?status=completed",
+              "host": ["{{base_url}}"],
+              "path": ["delivery", "my-orders"],
+              "query": [{ "key": "status", "value": "completed" }]
+            },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Coupons",
+      "item": [
+        {
+          "name": "List Active Coupons",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/coupons"
+          }
+        },
+        {
+          "name": "Apply Coupon (Preview)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/coupons/apply",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"code\": \"WELCOME50\",\n  \"order_amount\": 400\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recommendations",
+      "item": [
+        {
+          "name": "Personalized Recommendations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/recommendations?lat=13.0827&lng=80.2707",
+              "host": ["{{base_url}}"],
+              "path": ["recommendations"],
+              "query": [
+                { "key": "lat", "value": "13.0827" },
+                { "key": "lng", "value": "80.2707" }
+              ]
+            },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Trending Items",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/recommendations/trending"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Submit Review",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/reviews",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"order_id\": 1,\n  \"restaurant_rating\": 5,\n  \"delivery_rating\": 4,\n  \"comment\": \"Amazing biryani! Will order again.\"\n}" }
+          }
+        },
+        {
+          "name": "Restaurant Reviews",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/restaurants/1/reviews"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "My Subscription Status",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/subscriptions/status",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Subscribe Restaurant (Basic)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/subscriptions/restaurant",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"plan\": \"basic\" }" }
+          }
+        },
+        {
+          "name": "Subscribe Customer (Plus)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/subscriptions/customer",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"plan\": \"plus\" }" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Addresses",
+      "item": [
+        {
+          "name": "List Addresses",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/addresses",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Add Address",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/addresses",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"label\": \"Home\",\n  \"address_line1\": \"42 Anna Nagar\",\n  \"city\": \"Chennai\",\n  \"state\": \"Tamil Nadu\",\n  \"pincode\": \"600040\",\n  \"lat\": 13.0850,\n  \"lng\": 80.2100\n}" }
+          }
+        },
+        {
+          "name": "Set Default Address",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/addresses/1/default",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/dashboard",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/users?role=customer&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users"],
+              "query": [
+                { "key": "role", "value": "customer" },
+                { "key": "page", "value": "1" }
+              ]
+            },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "List Restaurants (Pending)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/restaurants?status=pending",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "restaurants"],
+              "query": [{ "key": "status", "value": "pending" }]
+            },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Approve Restaurant",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/admin/restaurants/1/approve",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"status\": \"approved\" }" }
+          }
+        },
+        {
+          "name": "Platform Earnings",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/earnings",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Settlements List",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/settlements",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Process Settlement",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/admin/settlements/1/process",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Delivery Partners",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/delivery-partners",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Verify Delivery Partner",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/admin/delivery-partners/1/verify",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"status\": \"approved\" }" }
+          }
+        },
+        {
+          "name": "Get Settings",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/settings",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Update Settings",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/admin/settings",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"platform_commission_percent\": 20,\n  \"subscription_commission_percent\": 8,\n  \"base_delivery_fee\": 25,\n  \"per_km_rate\": 5,\n  \"gst_percent\": 5\n}" }
+          }
+        },
+        {
+          "name": "Create Coupon",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/admin/coupons",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"code\": \"FEST30\",\n  \"discount_type\": \"percent\",\n  \"discount_value\": 30,\n  \"min_order_amount\": 200,\n  \"max_discount_amount\": 75,\n  \"max_uses\": 500,\n  \"expires_at\": \"2025-12-31\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "My Notifications",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/notifications",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Mark Read",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/notifications/1/read",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "WhatsApp",
+      "item": [
+        {
+          "name": "Simulate WhatsApp Order",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/whatsapp/order",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"9876543210\",\n  \"message\": \"1 chicken biryani and 2 naan from Biryani House, deliver to Anna Nagar\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/health"
+          }
+        }
+      ]
+    }
+  ]
+}

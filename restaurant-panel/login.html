@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Partner Login — Aharam</title>
+  <link rel="stylesheet" href="css/panel.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    body{justify-content:center;align-items:center;background:linear-gradient(135deg,#1a1a2e,#16213e)}
+    .login-box{background:#fff;border-radius:16px;padding:36px;width:min(420px,95vw);box-shadow:0 20px 60px rgba(0,0,0,.3)}
+    .login-logo{font-size:26px;font-weight:800;color:#ff5722;text-align:center;margin-bottom:24px}
+  </style>
+</head>
+<body>
+<div class="login-box">
+  <div class="login-logo">🍽 Aharam Partner</div>
+  <h2 style="font-size:20px;font-weight:700;margin-bottom:4px">Restaurant Login</h2>
+  <p style="font-size:14px;color:#777;margin-bottom:24px">Sign in to manage your restaurant</p>
+
+  <form id="loginForm">
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <input type="email" class="form-control" id="email" required/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" class="form-control" id="password" required/>
+    </div>
+    <div id="loginErr" style="color:#f44336;font-size:13px;margin-bottom:12px"></div>
+    <div style="text-align:right;margin-bottom:12px">
+      <a href="#" id="forgotLink" style="font-size:13px;color:#ff5722;font-weight:600">Forgot Password?</a>
+    </div>
+    <button type="submit" class="btn btn-primary btn-block" id="loginBtn" style="padding:14px">Login to Dashboard</button>
+  </form>
+
+  <!-- Forgot Password Panel -->
+  <div id="forgotPanel" style="display:none;margin-top:20px;border-top:1px solid #eee;padding-top:20px">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:4px">Reset Password</h3>
+    <p style="font-size:13px;color:#777;margin-bottom:16px">Enter your registered email to receive a reset OTP.</p>
+    <div id="fpMsg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px"></div>
+
+    <!-- Step 1: Email -->
+    <div id="fpStep1">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-control" id="fpEmail" placeholder="your@email.com"/>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="sendForgotOtp()">Send OTP</button>
+    </div>
+
+    <!-- Step 2: OTP + New Password -->
+    <div id="fpStep2" style="display:none">
+      <div class="form-group">
+        <label class="form-label">OTP Code</label>
+        <input type="text" class="form-control" id="fpOtp" placeholder="Enter 6-digit OTP" maxlength="6" style="letter-spacing:4px;text-align:center;font-size:18px"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <input type="password" class="form-control" id="fpNewPwd" placeholder="Min 6 characters"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm New Password</label>
+        <input type="password" class="form-control" id="fpConfirmPwd" placeholder="Repeat new password"/>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="submitResetPassword()">Reset Password</button>
+    </div>
+
+    <p style="text-align:center;margin-top:12px">
+      <a href="#" id="backToLogin" style="font-size:13px;color:#777">← Back to Login</a>
+    </p>
+  </div>
+
+  <p style="text-align:center;margin-top:16px;font-size:14px;color:#777">
+    Not a partner yet? <a href="/aharam/customer-app/pages/register.html" style="color:#ff5722;font-weight:600">Register your restaurant</a>
+  </p>
+</div>
+
+<script src="js/api-partner.js"></script>
+<script>
+// ── Forgot password ───────────────────────────────────────
+document.getElementById('forgotLink').addEventListener('click', e => {
+  e.preventDefault();
+  document.getElementById('loginForm').style.display   = 'none';
+  document.getElementById('forgotPanel').style.display = 'block';
+});
+document.getElementById('backToLogin').addEventListener('click', e => {
+  e.preventDefault();
+  document.getElementById('forgotPanel').style.display = 'none';
+  document.getElementById('loginForm').style.display   = 'block';
+  document.getElementById('fpMsg').style.display       = 'none';
+  document.getElementById('fpStep1').style.display     = 'block';
+  document.getElementById('fpStep2').style.display     = 'none';
+});
+
+function showFpMsg(text, success) {
+  const el = document.getElementById('fpMsg');
+  el.textContent = text;
+  el.style.display    = 'block';
+  el.style.background = success ? '#e8f5e9' : '#ffebee';
+  el.style.color      = success ? '#2e7d32' : '#c62828';
+}
+
+async function sendForgotOtp() {
+  const email = document.getElementById('fpEmail').value.trim();
+  if (!email) { showFpMsg('Enter your email address.', false); return; }
+  const res = await Api.request('POST', '/forgot-password', { email });
+  if (res?.success) {
+    showFpMsg(res.message || 'OTP sent to your email.', true);
+    document.getElementById('fpStep1').style.display = 'none';
+    document.getElementById('fpStep2').style.display = 'block';
+    // Dev mode: auto-fill OTP if returned
+    if (res.data?.otp) {
+      document.getElementById('fpOtp').value = res.data.otp;
+      showFpMsg(`OTP: ${res.data.otp} (dev mode — pre-filled)`, true);
+    }
+  } else {
+    showFpMsg(res?.message || 'Failed to send OTP.', false);
+  }
+}
+
+async function submitResetPassword() {
+  const email   = document.getElementById('fpEmail').value.trim();
+  const otp     = document.getElementById('fpOtp').value.trim();
+  const newPwd  = document.getElementById('fpNewPwd').value;
+  const confirm = document.getElementById('fpConfirmPwd').value;
+  if (!otp)             { showFpMsg('Enter the OTP.', false); return; }
+  if (!newPwd)          { showFpMsg('Enter a new password.', false); return; }
+  if (newPwd.length < 6){ showFpMsg('Password must be at least 6 characters.', false); return; }
+  if (newPwd !== confirm){ showFpMsg('Passwords do not match.', false); return; }
+  const res = await Api.request('POST', '/reset-password', { email, otp, new_password: newPwd });
+  if (res?.success) {
+    showFpMsg('Password reset! Redirecting to login…', true);
+    setTimeout(() => {
+      document.getElementById('forgotPanel').style.display = 'none';
+      document.getElementById('loginForm').style.display   = 'block';
+      document.getElementById('fpStep1').style.display     = 'block';
+      document.getElementById('fpStep2').style.display     = 'none';
+      document.getElementById('fpEmail').value             = '';
+    }, 2000);
+  } else {
+    showFpMsg(res?.message || 'Reset failed. Check OTP.', false);
+  }
+}
+
+// Only skip login if already authenticated as a restaurant_owner
+(function () {
+  var token = localStorage.getItem('aharam_partner_token');
+  var user  = null;
+  try { user = JSON.parse(localStorage.getItem('aharam_partner_user')); } catch (e) {}
+  if (token && user && user.role === 'restaurant_owner') window.location.replace('index.html');
+})();
+
+document.getElementById('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginErr');
+  btn.disabled = true; btn.textContent = 'Logging in...';
+
+  const res = await Api.auth.login({
+    email:    document.getElementById('email').value.trim(),
+    password: document.getElementById('password').value,
+  });
+
+  btn.disabled = false; btn.textContent = 'Login to Dashboard';
+
+  if (res?.success && res.data.user.role === 'restaurant_owner') {
+    Auth.save(res.data.token, res.data.user);
+    window.location.href = 'index.html';
+  } else if (res?.success) {
+    err.textContent = 'This account is not a restaurant owner.';
+  } else {
+    err.textContent = res?.message || 'Login failed.';
+  }
+});
+</script>
+</body>
+</html>

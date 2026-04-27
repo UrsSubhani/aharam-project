@@ -1,0 +1,6 @@
+[2026-04-27 00:01:40] [INFO] Referral reward ₹25 each given for order 9 
+[2026-04-27 13:09:20] [ERROR] Order placement failed {"error":"There is already an active transaction"}
+[2026-04-27 13:09:34] [ERROR] Order placement failed {"error":"There is already an active transaction"}
+[2026-04-27 13:09:47] [ERROR] Order placement failed {"error":"There is already an active transaction"}
+[2026-04-27 13:18:03] [ERROR] Order placement failed {"error":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'pickup_address' in 'field list'"}
+[2026-04-27 13:18:09] [ERROR] Order placement failed {"error":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'pickup_address' in 'field list'"}

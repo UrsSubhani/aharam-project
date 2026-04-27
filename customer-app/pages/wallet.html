@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wallet & Referral — Aharam</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<header class="header"><div class="container header-inner">
+  <a href="../index.html" class="logo">🍽 <span data-pname>Aharam</span></a>
+  <nav class="header-nav">
+    <a href="orders.html" class="nav-link">My Orders</a>
+    <a href="cart.html" class="nav-link">🛒 Cart</a>
+    <div id="authSection"></div>
+    <div id="userSection" style="display:none">
+      <div class="user-menu">
+        <button class="btn btn-outline" id="userMenuBtn">👤 <span id="userName">Me</span> ▾</button>
+        <div class="dropdown" id="userDropdown">
+          <a href="profile.html">Profile</a>
+          <a href="wallet.html">💳 Wallet</a>
+          <a href="orders.html">My Orders</a>
+          <a href="#" id="logoutBtn">Logout</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+</div></header>
+
+<div class="page-header"><div class="container">
+  <h1 class="page-title">💳 Wallet & Referral</h1>
+</div></div>
+
+<div class="container" style="padding-bottom:60px;max-width:640px">
+
+  <!-- Wallet Balance Card -->
+  <div style="background:linear-gradient(135deg,#ff5722,#ff8a50);border-radius:16px;padding:28px 24px;color:#fff;margin-bottom:20px;position:relative;overflow:hidden">
+    <div style="position:absolute;right:-20px;top:-20px;width:120px;height:120px;background:rgba(255,255,255,.08);border-radius:50%"></div>
+    <div style="position:absolute;right:30px;bottom:-30px;width:80px;height:80px;background:rgba(255,255,255,.06);border-radius:50%"></div>
+    <div style="font-size:13px;opacity:.85;font-weight:500;margin-bottom:6px">Aharam Wallet Balance</div>
+    <div style="font-size:40px;font-weight:800;letter-spacing:-1px" id="walletBalance">₹—</div>
+    <div style="font-size:12px;opacity:.7;margin-top:4px" id="walletExpiry"></div>
+    <div style="margin-top:20px;display:flex;gap:12px">
+      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:10px 16px;flex:1;text-align:center">
+        <div style="font-size:11px;opacity:.8;margin-bottom:2px">Total Earned</div>
+        <div style="font-size:16px;font-weight:700" id="walletEarned">₹0</div>
+      </div>
+      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:10px 16px;flex:1;text-align:center">
+        <div style="font-size:11px;opacity:.8;margin-bottom:2px">Total Used</div>
+        <div style="font-size:16px;font-weight:700" id="walletUsed">₹0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Referral Card -->
+  <div class="card" style="margin-bottom:20px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <span style="font-size:22px">🎁</span>
+      <div>
+        <div style="font-size:16px;font-weight:700">Refer & Earn</div>
+        <div style="font-size:13px;color:#777" id="refRewardDesc">Earn wallet credits when friends order</div>
+      </div>
+    </div>
+
+    <div id="refLoading" style="text-align:center;padding:20px;color:#aaa;font-size:13px">Loading referral info…</div>
+
+    <div id="refContent" style="display:none">
+      <div style="background:#fff8f5;border:2px dashed #ff8a50;border-radius:10px;padding:16px;margin:16px 0;text-align:center">
+        <div style="font-size:12px;color:#777;margin-bottom:6px">Your Referral Code</div>
+        <div style="font-size:26px;font-weight:800;letter-spacing:3px;color:#ff5722" id="refCode">——</div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+          <button class="btn btn-outline" style="font-size:13px;padding:7px 16px" onclick="copyRefCode()">📋 Copy Code</button>
+          <button class="btn btn-primary" style="font-size:13px;padding:7px 16px;background:#25d366;border-color:#25d366" onclick="shareWhatsApp()">💬 WhatsApp</button>
+        </div>
+        <div id="copyMsg" style="font-size:12px;color:#22c55e;margin-top:6px;display:none">Copied!</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+        <div style="background:#f9f9f9;border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:#ff5722" id="refTotal">0</div>
+          <div style="font-size:11px;color:#777;margin-top:2px">Referred</div>
+        </div>
+        <div style="background:#f9f9f9;border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:#22c55e" id="refSuccess">0</div>
+          <div style="font-size:11px;color:#777;margin-top:2px">Completed</div>
+        </div>
+        <div style="background:#f9f9f9;border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:#333" id="refEarned">₹0</div>
+          <div style="font-size:11px;color:#777;margin-top:2px">Earned</div>
+        </div>
+      </div>
+
+      <div style="background:#e8f5e9;border-radius:8px;padding:12px 16px;font-size:13px;color:#2e7d32" id="refHowItWorks"></div>
+    </div>
+  </div>
+
+  <!-- Transactions Card -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h3 style="font-size:15px;font-weight:700;margin:0">Transaction History</h3>
+      <div style="font-size:13px;color:#aaa" id="txCount"></div>
+    </div>
+
+    <div id="txLoading" style="text-align:center;padding:30px;color:#aaa;font-size:13px">Loading…</div>
+    <div id="txEmpty"   style="display:none;text-align:center;padding:30px;color:#aaa;font-size:13px">No transactions yet.</div>
+    <div id="txList"    style="display:none"></div>
+    <div style="text-align:center;margin-top:16px;display:none" id="txLoadMore">
+      <button class="btn btn-outline" style="font-size:13px" onclick="loadMoreTx()">Load More</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/platform.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+if (!Auth.isLoggedIn()) window.location.href = 'login.html';
+
+let txPage = 1;
+let refLink = '';
+
+async function loadWallet() {
+  const res = await Api.wallet.get();
+  if (!res?.success) return;
+  const d = res.data;
+
+  document.getElementById('walletBalance').textContent = '₹' + parseFloat(d.balance || 0).toFixed(2);
+
+  // Calc earned/used from transactions
+  let earned = 0, used = 0;
+  (d.transactions || []).forEach(t => {
+    if (t.type === 'credit') earned += parseFloat(t.amount);
+    else used += parseFloat(t.amount);
+  });
+  document.getElementById('walletEarned').textContent = '₹' + earned.toFixed(2);
+  document.getElementById('walletUsed').textContent   = '₹' + used.toFixed(2);
+
+  renderTransactions(d.transactions || [], false);
+}
+
+async function loadReferral() {
+  const [refRes, settingsRes] = await Promise.all([
+    Api.referral.get(),
+    Api.get('/settings/public'),
+  ]);
+
+  document.getElementById('refLoading').style.display = 'none';
+
+  if (!refRes?.success) return;
+  const d = refRes.data;
+  const s = settingsRes?.data || {};
+
+  const rewardAmt = s.referral_reward_amount || d.reward_amount || 25;
+  const minOrder  = s.referral_min_order     || d.min_order     || 100;
+
+  document.getElementById('refRewardDesc').textContent =
+    `Earn ₹${rewardAmt} when your friend places their first order`;
+
+  document.getElementById('refHowItWorks').innerHTML =
+    `<strong>How it works:</strong> Share your code → Friend registers → They place an order of ₹${minOrder}+ → ` +
+    `<strong>Both of you get ₹${rewardAmt}</strong> in your Aharam Wallet!`;
+
+  document.getElementById('refCode').textContent    = d.referral_code || '—';
+  document.getElementById('refTotal').textContent   = d.stats?.total_referrals   || 0;
+  document.getElementById('refSuccess').textContent = d.stats?.successful_referrals || 0;
+  document.getElementById('refEarned').textContent  = '₹' + (d.stats?.total_earned || 0);
+
+  refLink = d.referral_link || (window.location.origin + '/aharam/customer-app/pages/register.html?ref=' + (d.referral_code || ''));
+
+  document.getElementById('refContent').style.display = 'block';
+}
+
+function renderTransactions(txs, append) {
+  const list = document.getElementById('txList');
+  document.getElementById('txLoading').style.display = 'none';
+
+  if (!txs.length && !append) {
+    document.getElementById('txEmpty').style.display = 'block';
+    return;
+  }
+
+  list.style.display = 'block';
+
+  txs.forEach(tx => {
+    const isCredit = tx.type === 'credit';
+    const date = new Date(tx.created_at).toLocaleDateString('en-IN', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f0f0';
+    row.innerHTML = `
+      <div style="width:38px;height:38px;border-radius:50%;background:${isCredit ? '#e8f5e9' : '#ffebee'};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">
+        ${isCredit ? '⬇' : '⬆'}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.description || '—'}</div>
+        <div style="font-size:12px;color:#aaa;margin-top:2px">${date}</div>
+      </div>
+      <div style="font-size:15px;font-weight:700;color:${isCredit ? '#22c55e' : '#ef4444'};flex-shrink:0">
+        ${isCredit ? '+' : '-'}₹${parseFloat(tx.amount).toFixed(2)}
+      </div>`;
+    list.appendChild(row);
+  });
+
+  document.getElementById('txCount').textContent = '';
+}
+
+async function loadMoreTx() {
+  txPage++;
+  const res = await Api.wallet.transactions(txPage);
+  if (!res?.success) return;
+  const txs = res.data?.transactions || [];
+  renderTransactions(txs, true);
+  if (txs.length < 20) document.getElementById('txLoadMore').style.display = 'none';
+}
+
+function copyRefCode() {
+  const code = document.getElementById('refCode').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const msg = document.getElementById('copyMsg');
+    msg.style.display = 'block';
+    setTimeout(() => msg.style.display = 'none', 2000);
+  });
+}
+
+function shareWhatsApp() {
+  const code = document.getElementById('refCode').textContent;
+  const text = encodeURIComponent(
+    `Hey! Use my referral code *${code}* on Aharam to get ₹ wallet credits on your first order!\n👉 ${refLink}`
+  );
+  window.open(`https://wa.me/?text=${text}`, '_blank');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadWallet();
+  loadReferral();
+});
+</script>
+</body>
+</html>

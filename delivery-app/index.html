@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Delivery Partner App — Aharam</title>
+  <link rel="stylesheet" href="css/delivery.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <script>
+    (function () {
+      var token = localStorage.getItem('aharam_rider_token');
+      var user  = null;
+      try { user = JSON.parse(localStorage.getItem('aharam_rider_user')); } catch (e) {}
+      if (!token || !user || user.role !== 'delivery_partner') {
+        localStorage.removeItem('aharam_rider_token');
+        localStorage.removeItem('aharam_rider_user');
+        window.location.replace('login.html');
+      }
+    })();
+  </script>
+</head>
+<body style="visibility:hidden">
+<script>document.body.style.visibility='visible';</script>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div class="top-logo">🍽 <span data-pname>Aharam</span> Rider</div>
+  <div class="top-right">
+    <div id="earningsDisplay" style="font-size:13px;font-weight:600;color:#4caf50">₹0 today</div>
+    <label class="toggle-switch" title="Go Online/Offline">
+      <input type="checkbox" id="availabilityToggle"/>
+      <span class="toggle-slider"></span>
+    </label>
+    <span id="availabilityLabel" style="font-size:13px;font-weight:700"></span>
+    <button onclick="Auth.logout()" style="background:#ff5722;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Log Out</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="active">Active Order</button>
+  <button class="tab-btn" data-tab="new">New Requests</button>
+  <button class="tab-btn" data-tab="history">History</button>
+  <button class="tab-btn" data-tab="earnings">Earnings</button>
+  <button class="tab-btn" data-tab="profile">Profile</button>
+</div>
+
+<!-- CONTENT PANELS -->
+<div class="content">
+
+  <!-- Active Order -->
+  <div id="tab-active" class="tab-panel active">
+    <div id="noActiveOrder" style="text-align:center;padding:60px 16px">
+      <div style="font-size:60px;margin-bottom:16px">🛵</div>
+      <h3 style="font-weight:700;font-size:18px;margin-bottom:8px">No Active Delivery</h3>
+      <p style="color:#777;font-size:14px">Go online to receive delivery requests</p>
+    </div>
+    <div id="activeOrderCard" style="display:none">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+
+  <!-- New Requests -->
+  <div id="tab-new" class="tab-panel">
+    <div id="newOrdersList">
+      <div style="text-align:center;padding:40px;color:#777">
+        <div style="font-size:40px;margin-bottom:12px">📱</div>
+        <p>New delivery requests will appear here</p>
+        <p style="font-size:13px;margin-top:8px">Go online and stay on this tab</p>
+      </div>
+    </div>
+    <button class="fab-btn" id="refreshNewBtn">🔄 Refresh</button>
+  </div>
+
+  <!-- History -->
+  <div id="tab-history" class="tab-panel">
+    <div id="historyList" class="loading-msg">Loading...</div>
+  </div>
+
+  <!-- Earnings -->
+  <div id="tab-earnings" class="tab-panel">
+    <div class="earnings-summary">
+      <div class="earn-card"><div class="earn-val" id="todayEarn">₹0</div><div class="earn-label">Today</div></div>
+      <div class="earn-card"><div class="earn-val" id="weekEarn">₹0</div><div class="earn-label">This Week</div></div>
+      <div class="earn-card"><div class="earn-val" id="totalEarn">₹0</div><div class="earn-label">All Time</div></div>
+      <div class="earn-card"><div class="earn-val" id="totalDel">0</div><div class="earn-label">Deliveries</div></div>
+    </div>
+    <div class="panel-card" style="margin:16px">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">How You Earn</h3>
+      <div class="earn-info-row"><span>Base pay per delivery</span><strong id="earnBasePay">₹25</strong></div>
+      <div class="earn-info-row"><span id="earnDistanceLabel">Distance bonus (after 2 km)</span><strong id="earnPerKm">₹3/km</strong></div>
+      <div class="earn-info-row"><span>Tips from customers</span><strong>Variable</strong></div>
+    </div>
+  </div>
+
+  <!-- Profile -->
+  <div id="tab-profile" class="tab-panel">
+    <div class="panel-card" style="margin:16px">
+
+      <!-- Avatar + Name -->
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+        <div style="width:64px;height:64px;background:#ff5722;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;font-weight:700" id="dpAvatar">?</div>
+        <div>
+          <div style="font-size:18px;font-weight:700" id="dpName">—</div>
+          <div style="font-size:13px;color:#777" id="dpPhone">—</div>
+          <div id="dpBadge" style="margin-top:4px"></div>
+        </div>
+      </div>
+
+      <!-- Info rows -->
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;font-size:14px">
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5">
+          <span style="color:#777">Email</span><strong id="dpEmail">—</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5">
+          <span style="color:#777">Vehicle Type</span><strong id="dpVehicle" style="text-transform:capitalize">—</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5">
+          <span style="color:#777">Vehicle Number</span><strong id="dpVehicleNo">—</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5">
+          <span style="color:#777">Total Deliveries</span><strong id="dpTotalDel">—</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0">
+          <span style="color:#777">Total Earnings</span><strong id="dpTotalEarn" style="color:#4caf50">—</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Registration Details -->
+    <div class="panel-card" style="margin:0 16px 16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <h3 style="font-size:15px;font-weight:700;margin:0">✏️ Edit Profile Details</h3>
+        <button onclick="toggleDpEditForm()" id="dpEditToggleBtn" style="padding:6px 14px;background:#fff;border:1.5px solid #ff5722;color:#ff5722;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Edit</button>
+      </div>
+
+      <!-- Read-only view -->
+      <div id="dpProfileView" style="display:flex;flex-direction:column;gap:10px;font-size:14px">
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f5f5">
+          <span style="color:#777">City</span><strong id="dpViewCity">—</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f5f5">
+          <span style="color:#777">Vehicle Type</span><strong id="dpViewVehicleType" style="text-transform:capitalize">—</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f5f5">
+          <span style="color:#777">Vehicle Number</span><strong id="dpViewVehicleNo">—</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f5f5">
+          <span style="color:#777">Bank Account</span><strong id="dpViewBank">—</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0">
+          <span style="color:#777">IFSC Code</span><strong id="dpViewIfsc">—</strong>
+        </div>
+      </div>
+
+      <!-- Edit form (hidden by default) -->
+      <div id="dpEditForm" style="display:none;border-top:1px solid #f0f0f0;padding-top:16px;margin-top:12px">
+        <div id="dpEditMsg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px"></div>
+
+        <!-- GPS for city detection -->
+        <button id="dpGpsBtn" onclick="dpUseGPS()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:#fff3e0;border:1.5px dashed #ff5722;border-radius:10px;color:#ff5722;font-weight:600;font-size:13px;cursor:pointer;margin-bottom:14px;font-family:inherit">
+          <span id="dpGpsIcon">📍</span> <span id="dpGpsTxt">Detect City via GPS</span>
+        </button>
+
+        <div style="margin-bottom:12px">
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">City</label>
+          <select id="dpEditCity" style="width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box">
+            <option value="">Select City</option>
+            <option>Chennai</option><option>Hyderabad</option><option>Bangalore</option>
+            <option>Coimbatore</option><option>Madurai</option><option>Vinukonda</option>
+          </select>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">Vehicle Type</label>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+            <button class="dp-vehicle-btn" data-v="bicycle"   onclick="dpPickVehicle(this)" style="padding:10px 4px;border:2px solid #e0e0e0;border-radius:8px;text-align:center;font-size:11px;font-weight:600;cursor:pointer;background:#fff;font-family:inherit">🚲<br/>Bicycle</button>
+            <button class="dp-vehicle-btn" data-v="scooter"   onclick="dpPickVehicle(this)" style="padding:10px 4px;border:2px solid #e0e0e0;border-radius:8px;text-align:center;font-size:11px;font-weight:600;cursor:pointer;background:#fff;font-family:inherit">🛵<br/>Scooter</button>
+            <button class="dp-vehicle-btn" data-v="motorbike" onclick="dpPickVehicle(this)" style="padding:10px 4px;border:2px solid #e0e0e0;border-radius:8px;text-align:center;font-size:11px;font-weight:600;cursor:pointer;background:#fff;font-family:inherit">🏍<br/>Motorbike</button>
+            <button class="dp-vehicle-btn" data-v="car"       onclick="dpPickVehicle(this)" style="padding:10px 4px;border:2px solid #e0e0e0;border-radius:8px;text-align:center;font-size:11px;font-weight:600;cursor:pointer;background:#fff;font-family:inherit">🚗<br/>Car</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          <div>
+            <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">Vehicle Number</label>
+            <input type="text" id="dpEditVehicleNo" placeholder="TN01AB1234" style="width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box"/>
+          </div>
+          <div>
+            <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">Bank Account</label>
+            <input type="text" id="dpEditBank" placeholder="Account number" style="width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box"/>
+          </div>
+        </div>
+        <div style="margin-bottom:16px">
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">IFSC Code</label>
+          <input type="text" id="dpEditIfsc" placeholder="IFSC Code" style="width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box"/>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button onclick="saveDpProfile()" id="saveDpProfileBtn" style="flex:1;padding:12px;background:#ff5722;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Save Changes</button>
+          <button onclick="toggleDpEditForm()" style="padding:12px 20px;background:#fff;color:#777;border:1.5px solid #ddd;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Change Password -->
+    <div class="panel-card" style="margin:0 16px 16px">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:14px">Change Password</h3>
+      <div id="dpPwdMsg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px"></div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">Current Password</label>
+        <div style="position:relative">
+          <input type="password" id="dpCurrentPwd" placeholder="Enter current password" autocomplete="new-password" style="width:100%;padding:10px 44px 10px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box"/>
+          <button type="button" onclick="toggleDpPwd('dpCurrentPwd',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:#aaa">👁</button>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">New Password</label>
+        <div style="position:relative">
+          <input type="password" id="dpNewPwd" placeholder="Min 6 characters" autocomplete="new-password" style="width:100%;padding:10px 44px 10px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box"/>
+          <button type="button" onclick="toggleDpPwd('dpNewPwd',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:#aaa">👁</button>
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">Confirm New Password</label>
+        <div style="position:relative">
+          <input type="password" id="dpConfirmPwd" placeholder="Repeat new password" autocomplete="new-password" style="width:100%;padding:10px 44px 10px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box"/>
+          <button type="button" onclick="toggleDpPwd('dpConfirmPwd',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:#aaa">👁</button>
+        </div>
+      </div>
+      <button onclick="saveDpPassword()" style="width:100%;padding:12px;background:#ff5722;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Update Password</button>
+    </div>
+
+    <div style="margin:0 16px 32px">
+      <button onclick="Auth.logout()" style="width:100%;padding:12px;background:#fff;color:#f44336;border:2px solid #f44336;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Log Out</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Location update reminder -->
+<div id="locationBar" style="display:none;background:#fff3e0;padding:10px 16px;font-size:13px;text-align:center;border-top:1px solid #ff5722">
+  📍 Sharing your location for delivery tracking
+</div>
+
+<script src="js/api-delivery.js"></script>
+<script src="js/platform.js"></script>
+<script src="js/delivery.js"></script>
+</body>
+</html>

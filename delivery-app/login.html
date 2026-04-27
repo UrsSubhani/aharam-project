@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rider Login — Aharam</title>
+  <link rel="stylesheet" href="css/delivery.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    body { justify-content: center; align-items: center; min-height: 100vh;
+           background: linear-gradient(135deg, #1a1a2e, #16213e); display: flex; }
+    .login-card { background: #fff; border-radius: 16px; padding: 36px 28px;
+                  width: min(400px, 95vw); box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+    .login-logo { font-size: 26px; font-weight: 800; color: #ff5722;
+                  text-align: center; margin-bottom: 6px; }
+    .login-sub  { text-align: center; color: #777; font-size: 14px; margin-bottom: 28px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #333; }
+    .form-input { width: 100%; padding: 11px 14px; border: 1px solid #e0e0e0;
+                  border-radius: 8px; font-size: 15px; font-family: inherit;
+                  outline: none; transition: border .2s; }
+    .form-input:focus { border-color: #ff5722; }
+    .login-btn  { width: 100%; padding: 13px; background: #ff5722; color: #fff;
+                  border: none; border-radius: 8px; font-size: 15px; font-weight: 700;
+                  cursor: pointer; font-family: inherit; margin-top: 4px; transition: opacity .2s; }
+    .login-btn:hover { opacity: .9; }
+    .login-btn:disabled { opacity: .6; cursor: not-allowed; }
+    .err-msg { color: #f44336; font-size: 13px; margin-bottom: 12px;
+               background: #ffebee; padding: 9px 12px; border-radius: 6px; display: none; }
+  </style>
+</head>
+<body>
+<div class="login-card">
+  <div class="login-logo">🛵 Aharam Rider</div>
+  <p class="login-sub">Delivery Partner Login</p>
+
+  <div id="errMsg" class="err-msg"></div>
+
+  <form id="loginForm">
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <input type="email" class="form-input" id="email" placeholder="rider@example.com" required autocomplete="email"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" class="form-input" id="password" placeholder="••••••••" required autocomplete="current-password"/>
+    </div>
+    <button type="submit" class="login-btn" id="loginBtn">Sign In</button>
+  </form>
+  <p style="text-align:center;margin-top:20px;font-size:13px;color:#aaa">
+    New delivery partner? <a href="pages/register.html" style="color:#ff5722;font-weight:600;text-decoration:none">Apply here →</a>
+  </p>
+</div>
+
+<script src="js/api-delivery.js"></script>
+<script>
+  // Already logged in → go to dashboard
+  (function () {
+    var token = localStorage.getItem('aharam_rider_token');
+    var user  = null;
+    try { user = JSON.parse(localStorage.getItem('aharam_rider_user')); } catch (e) {}
+    if (token && user && user.role === 'delivery_partner') window.location.replace('index.html');
+  })();
+
+  document.getElementById('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('loginBtn');
+    const err = document.getElementById('errMsg');
+    err.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+
+    const res = await Api.auth.login({
+      email:    document.getElementById('email').value.trim(),
+      password: document.getElementById('password').value,
+    });
+
+    btn.disabled = false;
+    btn.textContent = 'Sign In';
+
+    if (res?.success && res.data.user.role === 'delivery_partner') {
+      Auth.save(res.data.token, res.data.user);
+      window.location.href = 'index.html';
+    } else if (res?.success) {
+      err.textContent = 'This account is not a delivery partner.';
+      err.style.display = 'block';
+    } else {
+      err.textContent = res?.message || 'Login failed. Check your credentials.';
+      err.style.display = 'block';
+    }
+  });
+</script>
+</body>
+</html>

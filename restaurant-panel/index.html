@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Restaurant Dashboard — Aharam Partner</title>
+  <link rel="stylesheet" href="css/panel.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <!-- Synchronous guard: runs before page renders, prevents blink -->
+  <script>
+    (function () {
+      var token = localStorage.getItem('aharam_partner_token');
+      var user  = null;
+      try { user = JSON.parse(localStorage.getItem('aharam_partner_user')); } catch (e) {}
+      if (!token || !user || user.role !== 'restaurant_owner') {
+        localStorage.removeItem('aharam_partner_token');
+        localStorage.removeItem('aharam_partner_user');
+        window.location.replace('login.html');
+      }
+    })();
+  </script>
+</head>
+<body style="visibility:hidden">
+<script>document.body.style.visibility='visible';</script>
+
+<!-- ── SIDEBAR ─────────────────────────────────────────── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">🍽 <span data-pname>Aharam</span> <span style="font-size:12px;opacity:.6">Partner</span></div>
+  <nav class="sidebar-nav">
+    <a href="#" class="nav-item active" data-page="dashboard">📊 Dashboard</a>
+    <a href="#" class="nav-item" data-page="orders">📦 Live Orders</a>
+    <a href="#" class="nav-item" data-page="menu">🍜 Menu</a>
+    <a href="#" class="nav-item" data-page="earnings">💰 Earnings</a>
+    <a href="#" class="nav-item" data-page="coupons">🎟 Coupons</a>
+    <a href="#" class="nav-item" data-page="reviews">⭐ Reviews</a>
+    <a href="#" class="nav-item" data-page="subscription">🏅 Subscription</a>
+    <a href="#" class="nav-item" data-page="settings">⚙️ Settings</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div id="sidebarRestName" style="font-size:13px;font-weight:600;margin-bottom:4px"></div>
+    <div id="sidebarOwnerName" style="font-size:12px;opacity:.6"></div>
+    <button class="btn btn-outline" style="margin-top:10px;width:100%;font-size:13px" id="sidebarLogout" onclick="Auth.logout()">Logout</button>
+  </div>
+</aside>
+
+<!-- ── MAIN ────────────────────────────────────────────── -->
+<main class="main-content">
+  <div class="topbar">
+    <button class="menu-toggle" id="menuToggle">☰</button>
+    <h1 class="topbar-title" id="pageTitle">Dashboard</h1>
+    <div class="topbar-right">
+      <div id="openStatusWrap">
+        <span id="openLabel" style="font-size:13px;margin-right:8px">Status:</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="openToggle"/>
+          <span class="toggle-slider"></span>
+        </label>
+        <span id="openText" style="font-size:13px;margin-left:8px;font-weight:600"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DASHBOARD PAGE ─────────────────────────────────── -->
+  <div id="page-dashboard" class="page active">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-val" id="todayOrders">0</div>
+        <div class="stat-label">Today's Orders</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-val" id="todayRevenue">₹0</div>
+        <div class="stat-label">Today's Revenue</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🕐</div>
+        <div class="stat-val" id="pendingOrders">0</div>
+        <div class="stat-label">Pending Orders</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⭐</div>
+        <div class="stat-val" id="avgRating">0.0</div>
+        <div class="stat-label">Avg Rating</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-val" id="dashTotalOrders">0</div>
+        <div class="stat-label">Total Orders</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💵</div>
+        <div class="stat-val" id="dashTotalRevenue">₹0</div>
+        <div class="stat-label">Total Food Revenue</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🏦</div>
+        <div class="stat-val" id="dashNetPayout" style="color:#4caf50">₹0</div>
+        <div class="stat-label">Net Payout (After Commission)</div>
+      </div>
+    </div>
+
+    <div class="panel-grid">
+      <div class="panel-card">
+        <div class="panel-card-header">
+          <h3>Recent Orders</h3>
+          <button class="btn btn-outline btn-sm" onclick="showPage('orders')">View All</button>
+        </div>
+        <div id="recentOrdersTable"></div>
+      </div>
+      <div class="panel-card">
+        <div class="panel-card-header"><h3>Quick Actions</h3></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn btn-primary" onclick="showPage('orders')">📦 Manage Orders</button>
+          <button class="btn btn-outline" onclick="showPage('menu')">➕ Add Menu Item</button>
+          <button class="btn btn-outline" onclick="showPage('earnings')">💰 View Earnings</button>
+          <button class="btn btn-outline" onclick="showPage('subscription')">⭐ Upgrade Plan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LIVE ORDERS PAGE ───────────────────────────────── -->
+  <div id="page-orders" class="page">
+    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+      <button class="btn btn-outline btn-sm order-filter active" data-status="">All</button>
+      <button class="btn btn-outline btn-sm order-filter" data-status="pending">Pending</button>
+      <button class="btn btn-outline btn-sm order-filter" data-status="confirmed">Confirmed</button>
+      <button class="btn btn-outline btn-sm order-filter" data-status="preparing">Preparing</button>
+      <button class="btn btn-outline btn-sm order-filter" data-status="ready">Ready</button>
+      <button class="btn btn-outline btn-sm order-filter" data-status="delivered">Delivered</button>
+      <button class="btn btn-outline btn-sm" id="refreshOrdersBtn">🔄 Refresh</button>
+    </div>
+    <div id="ordersTableWrap"></div>
+  </div>
+
+  <!-- ── MENU PAGE ──────────────────────────────────────── -->
+  <div id="page-menu" class="page">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h2 style="font-size:18px;font-weight:700">Menu Items</h2>
+      <button class="btn btn-primary" id="addItemBtn">+ Add Item</button>
+    </div>
+
+    <!-- Add/Edit Item Form -->
+    <div id="itemFormCard" class="panel-card" style="display:none;margin-bottom:24px">
+      <h3 id="itemFormTitle" style="margin-bottom:16px;font-size:16px;font-weight:700">Add Menu Item</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="form-group">
+          <label class="form-label">Item Name *</label>
+          <input class="form-control" id="iName" placeholder="e.g. Masala Dosa"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-control" id="iCategory">
+            <option value="">-- Select Category --</option>
+          </select>
+          <div style="font-size:11px;color:#aaa;margin-top:4px">Categories are managed by admin. Contact admin to add new categories.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Price (₹) *</label>
+          <input class="form-control" type="number" id="iPrice" placeholder="e.g. 80"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Discount Price (₹) <span style="font-size:11px;color:#aaa">optional</span></label>
+          <input class="form-control" type="number" id="iDiscountPrice" placeholder="e.g. 65 (leave blank for no discount)"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Food Type</label>
+          <select class="form-control" id="iFoodType">
+            <option value="veg">🟢 Veg</option>
+            <option value="non_veg">🔴 Non-Veg</option>
+            <option value="egg">🟡 Egg</option>
+            <option value="vegan">🌱 Vegan</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label class="form-label">Item Image URL <span style="font-size:11px;color:#aaa">optional — paste a direct image link</span></label>
+          <input class="form-control" id="iImage" placeholder="https://example.com/image.jpg"/>
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label class="form-label">Description</label>
+          <input class="form-control" id="iDesc" placeholder="Brief description"/>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-primary" id="saveItemBtn">Save Item</button>
+        <button class="btn btn-outline" id="cancelItemBtn">Cancel</button>
+      </div>
+    </div>
+
+    <div id="menuItemsTable"></div>
+  </div>
+
+  <!-- ── EARNINGS PAGE ─────────────────────────────────── -->
+  <div id="page-earnings" class="page">
+    <div class="panel-card" style="margin-bottom:20px">
+      <h3 style="margin-bottom:16px;font-size:16px;font-weight:700">Earnings Overview</h3>
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card">
+          <div class="stat-icon">📦</div>
+          <div class="stat-val" id="earnTotalOrders">0</div>
+          <div class="stat-label">Total Orders</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-val" id="earnTotalRevenue">₹0</div>
+          <div class="stat-label">Food Revenue</div>
+          <div style="font-size:11px;color:#aaa;margin-top:2px">Before commission</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🏦</div>
+          <div class="stat-val" id="earnNetPayout">₹0</div>
+          <div class="stat-label">Net Payout</div>
+          <div style="font-size:11px;color:#aaa;margin-top:2px">After commission deduction</div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-card">
+      <h3 style="margin-bottom:12px;font-size:15px;font-weight:700">Commission Model</h3>
+      <div id="commissionInfo" style="font-size:14px;line-height:1.8"></div>
+    </div>
+  </div>
+
+  <!-- ── COUPONS PAGE ─────────────────────────────────── -->
+  <div id="page-coupons" class="page">
+    <div class="panel-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <h2 style="font-size:18px;font-weight:700">My Coupons</h2>
+        <button class="btn btn-primary" onclick="showCreateRestCoupon()">+ Create Coupon</button>
+      </div>
+      <p style="font-size:13px;color:#777;margin-bottom:16px">These coupons are exclusive to your restaurant — only visible to customers ordering from you.</p>
+      <div id="restCouponList"><div style="text-align:center;padding:32px;color:#777">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- ── SUBSCRIPTION PAGE ─────────────────────────────── -->
+  <div id="page-subscription" class="page">
+    <div class="panel-card" style="max-width:600px">
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:6px">Subscription Plans</h3>
+      <p style="font-size:14px;color:#777;margin-bottom:20px">
+        Subscribe to reduce your commission rate and grow your business!
+      </p>
+      <div id="currentSubInfo" style="margin-bottom:20px"></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:stretch" id="planGrid"></div>
+    </div>
+  </div>
+
+  <!-- ── SETTINGS PAGE ─────────────────────────────────── -->
+  <div id="page-settings" class="page">
+    <div class="panel-card" style="max-width:600px">
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:20px">Restaurant Settings</h3>
+      <form id="settingsForm">
+        <div class="form-group">
+          <label class="form-label">Restaurant Name</label>
+          <input class="form-control" id="sName"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cuisine Type <span style="font-size:11px;color:#999;font-weight:400">(select all that apply)</span></label>
+          <div class="cuisine-chip-picker" id="sCuisineChips">
+            <button type="button" class="c-chip" data-v="South Indian">South Indian</button>
+            <button type="button" class="c-chip" data-v="North Indian">North Indian</button>
+            <button type="button" class="c-chip" data-v="Chinese">Chinese</button>
+            <button type="button" class="c-chip" data-v="Biryani">Biryani</button>
+            <button type="button" class="c-chip" data-v="Fast Food">Fast Food</button>
+            <button type="button" class="c-chip" data-v="Snacks">Snacks</button>
+            <button type="button" class="c-chip" data-v="Desserts">Desserts</button>
+            <button type="button" class="c-chip" data-v="Beverages">Beverages</button>
+            <button type="button" class="c-chip" data-v="Seafood">Seafood</button>
+            <button type="button" class="c-chip" data-v="Rolls & Wraps">Rolls &amp; Wraps</button>
+            <button type="button" class="c-chip" data-v="Tiffins">Tiffins</button>
+            <button type="button" class="c-chip" data-v="Meals">Meals</button>
+          </div>
+          <input type="hidden" id="sCuisine"/>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="form-group">
+            <label class="form-label">Opening Time</label>
+            <input class="form-control" type="time" id="sOpen"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Closing Time</label>
+            <input class="form-control" type="time" id="sClose"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Min Order Amount (₹)</label>
+          <input class="form-control" type="number" id="sMinOrder"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">WhatsApp Number</label>
+          <input class="form-control" id="sWhatsapp" placeholder="For WhatsApp ordering"/>
+        </div>
+
+        <!-- Restaurant Address -->
+        <div style="border-top:1px solid #f0f0f0;padding-top:18px;margin-top:4px;margin-bottom:18px">
+          <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:14px">📍 Restaurant Address</div>
+
+          <button type="button" id="sGpsBtn" onclick="detectSettingsLocation()"
+            style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:#fff3e0;border:1.5px dashed #ff5722;border-radius:10px;color:#ff5722;font-weight:600;font-size:13px;cursor:pointer;margin-bottom:14px;font-family:inherit">
+            <span id="sGpsIcon">📍</span> <span id="sGpsTxt">Detect Location via GPS</span>
+          </button>
+
+          <div class="form-group">
+            <label class="form-label">Full Address</label>
+            <textarea class="form-control" id="sAddress" rows="2" placeholder="Shop No., Street, Area, Landmark…" style="resize:none"></textarea>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="form-group">
+              <label class="form-label">City</label>
+              <input class="form-control" id="sCity" placeholder="Chennai"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pincode</label>
+              <input class="form-control" id="sPincode" placeholder="600001" maxlength="6"/>
+            </div>
+          </div>
+          <input type="hidden" id="sLat"/>
+          <input type="hidden" id="sLng"/>
+          <div id="sLocStatus" style="font-size:12px;color:#4caf50;display:none;margin-top:-8px;margin-bottom:10px"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Restaurant Image URL</label>
+          <input class="form-control" id="sLogoImage" placeholder="https://example.com/your-restaurant-photo.jpg"/>
+          <div class="form-hint">Paste a direct image link. This photo appears on your restaurant card.</div>
+          <div id="sLogoPreview" style="margin-top:10px;display:none">
+            <img id="sLogoImg" src="" alt="Preview" style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;border:1px solid #e0e0e0"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-control" id="sDesc" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Settings</button>
+      </form>
+    </div>
+
+    <!-- Account & Password -->
+    <div class="panel-card" style="max-width:600px;margin-top:20px">
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:20px">Account</h3>
+
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5;font-size:14px;margin-bottom:20px">
+        <span style="color:#777">Email Address</span>
+        <strong id="acEmail" style="color:#333">—</strong>
+      </div>
+
+      <h4 style="font-size:15px;font-weight:700;margin-bottom:14px;color:#333">Change Password</h4>
+      <div id="acPwdMsg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px"></div>
+      <div class="form-group">
+        <label class="form-label">Current Password</label>
+        <div style="position:relative">
+          <input type="password" class="form-control" id="acCurrentPwd" placeholder="Enter current password" autocomplete="new-password" style="padding-right:44px"/>
+          <button type="button" onclick="toggleSettingsPwd('acCurrentPwd',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:#aaa;line-height:1;padding:0">👁</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <div style="position:relative">
+          <input type="password" class="form-control" id="acNewPwd" placeholder="Min 6 characters" style="padding-right:44px"/>
+          <button type="button" onclick="toggleSettingsPwd('acNewPwd',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:#aaa;line-height:1;padding:0">👁</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm New Password</label>
+        <div style="position:relative">
+          <input type="password" class="form-control" id="acConfirmPwd" placeholder="Repeat new password" style="padding-right:44px"/>
+          <button type="button" onclick="toggleSettingsPwd('acConfirmPwd',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:#aaa;line-height:1;padding:0">👁</button>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="saveRestaurantPassword()">Update Password</button>
+    </div>
+  </div>
+
+  <!-- ── REVIEWS PAGE ──────────────────────────────────── -->
+  <div id="page-reviews" class="page">
+    <div id="reviewsContent">
+      <div class="loading-spinner">Loading reviews…</div>
+    </div>
+  </div>
+</main>
+
+<script src="js/api-partner.js?v=2"></script>
+<script src="js/platform.js"></script>
+<script src="js/partner.js?v=2"></script>
+</body>
+</html>
