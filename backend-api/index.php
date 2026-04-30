@@ -14,6 +14,20 @@
 
 declare(strict_types=1);
 
+// ── CORS must be first — before any require that could fail and output errors ─
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if ($origin) {
+    header("Access-Control-Allow-Origin: $origin");
+    header('Vary: Origin');
+} else {
+    header('Access-Control-Allow-Origin: *');
+}
+header('Access-Control-Allow-Credentials: true');
+header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept');
+header('Access-Control-Max-Age: 86400');
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
+
 // ── 1. Bootstrap ─────────────────────────────────────────────────────────────
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/database.php';
@@ -22,9 +36,8 @@ require_once __DIR__ . '/utils/Validator.php';
 require_once __DIR__ . '/utils/Helper.php';
 require_once __DIR__ . '/Router.php';
 
-// ── 2. CORS ───────────────────────────────────────────────────────────────────
+// ── 2. CORS (full middleware — already handled above, kept for preflight cache)
 require_once __DIR__ . '/middlewares/CORSMiddleware.php';
-CORSMiddleware::handle();
 
 // ── 3. Content-Type guard ─────────────────────────────────────────────────────
 header('Content-Type: application/json; charset=utf-8');

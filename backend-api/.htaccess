@@ -11,8 +11,8 @@ Options -MultiViews
 RewriteEngine On
 
 # Set base path if API lives in a subdirectory
-# Uncomment and adjust if needed:
-# RewriteBase /aharam/backend-api/
+# Local: RewriteBase /aharam/backend-api/
+RewriteBase /backend/
 
 # ── Security headers ──────────────────────────────────────────
 <IfModule mod_headers.c>

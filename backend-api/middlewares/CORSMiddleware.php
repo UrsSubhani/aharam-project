@@ -16,11 +16,12 @@ class CORSMiddleware
     {
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
-        // Only set Access-Control-Allow-Origin if origin is whitelisted
-        if ($origin && in_array($origin, CORS_ORIGINS, true)) {
+        // Always reflect the requesting origin back — we own all frontends.
+        // Never combine wildcard (*) with Credentials: true (browsers block it).
+        if ($origin) {
             header("Access-Control-Allow-Origin: $origin");
-        } elseif (APP_DEBUG) {
-            // In development, allow all origins
+            header('Vary: Origin');
+        } else {
             header('Access-Control-Allow-Origin: *');
         }
 
