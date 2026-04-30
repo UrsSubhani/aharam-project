@@ -1,16 +1,23 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home2/innovx5x/public_html
+    - export DEPLOYPATH=/home2/innovx5x/aharam.in
 
-    # Clean old files (important)
-    - /bin/rm -rf $DEPLOYPATH/*
+    # Ensure folder exists
+    - /bin/mkdir -p $DEPLOYPATH
 
-    # Copy customer app to root
+    # Copy customer app to root (main site)
     - /bin/cp -R customer-app/. $DEPLOYPATH
 
-    # Copy other apps
+    # Copy other apps (overwrite only these folders)
+    - /bin/rm -rf $DEPLOYPATH/admin-panel
     - /bin/cp -R admin-panel $DEPLOYPATH
+
+    - /bin/rm -rf $DEPLOYPATH/restaurant-panel
     - /bin/cp -R restaurant-panel $DEPLOYPATH
+
+    - /bin/rm -rf $DEPLOYPATH/delivery-app
     - /bin/cp -R delivery-app $DEPLOYPATH
+
+    - /bin/rm -rf $DEPLOYPATH/backend-api
     - /bin/cp -R backend-api $DEPLOYPATH
