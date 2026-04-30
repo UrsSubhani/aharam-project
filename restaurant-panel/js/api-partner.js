@@ -4,7 +4,7 @@
 
 const API_BASE = window.location.hostname === 'localhost'
   ? 'http://localhost/aharam/backend-api'
-  : 'https://aharam.in/backend';
+  : 'https://aharam.in/backend-api';
 
 const Api = {
   async request(method, path, body = null, query = {}) {
