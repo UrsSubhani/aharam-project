@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23FF6B2B'/><text x='50' y='72' font-size='65' text-anchor='middle' fill='white' font-family='Arial,sans-serif' font-weight='bold'>A</text></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cart & Checkout — Aharam</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<header class="header"><div class="container header-inner">
+  <a href="../index.html" class="logo">🍽 <span data-pname>Aharam</span></a>
+  <div id="authSection"></div>
+  <div id="userSection" style="display:none"><a href="orders.html" class="nav-link">My Orders</a></div>
+</div></header>
+
+<div class="page-header"><div class="container">
+  <h1 class="page-title">🛒 Your Cart</h1>
+</div></div>
+
+<div class="container" style="padding-bottom:60px">
+  <div id="emptyCart" style="display:none;text-align:center;padding:60px 0">
+    <div style="font-size:64px;margin-bottom:16px">🛒</div>
+    <h2 style="font-size:22px;font-weight:700;margin-bottom:8px">Your cart is empty</h2>
+    <p style="color:#777;margin-bottom:24px">Browse restaurants and add items to get started</p>
+    <a href="../index.html" class="btn btn-primary btn-lg">Browse Restaurants</a>
+  </div>
+
+  <div id="cartContent" style="display:none">
+    <div class="two-col">
+
+      <!-- Left: Items + Coupon + Delivery -->
+      <div>
+        <!-- Cart Items -->
+        <div class="card" style="margin-bottom:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h3 style="font-size:16px;font-weight:700" id="cartRestName">Cart</h3>
+            <button class="btn btn-outline" style="font-size:12px;padding:6px 12px;color:#f44336;border-color:#f44336" id="clearCartBtn">Clear Cart</button>
+          </div>
+          <div id="cartItemsList"></div>
+        </div>
+
+        <!-- Coupon -->
+        <div class="card" style="margin-bottom:20px">
+          <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">🎟 Apply Coupon</h3>
+          <div style="display:flex;gap:8px">
+            <input type="text" class="form-control" id="couponInput" placeholder="Enter coupon code"/>
+            <button class="btn btn-primary" id="applyCouponBtn">Apply</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+            <div id="couponMsg" style="font-size:13px;flex:1"></div>
+            <button id="removeCouponBtn" onclick="removeCoupon()" style="display:none;font-size:12px;color:#f44336;background:none;border:1px solid #f44336;border-radius:6px;padding:3px 10px;cursor:pointer;white-space:nowrap">✕ Remove</button>
+          </div>
+          <!-- Available coupons -->
+          <div id="availableCoupons" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px"></div>
+        </div>
+
+        <!-- Delivery Address -->
+        <div class="card" style="margin-bottom:20px">
+          <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">📍 Delivery Address</h3>
+          <div id="addressList"></div>
+          <button class="btn btn-outline" style="margin-top:12px;font-size:13px" id="addAddressBtn">+ Add New Address</button>
+
+          <!-- Add address form (hidden) -->
+          <div id="addAddressForm" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid #eee">
+            <!-- Use My Location -->
+            <button type="button" id="useLocationBtn" style="width:100%;padding:10px;margin-bottom:14px;background:#fff3e0;color:#e64a19;border:1px dashed #ff5722;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+              📍 Use My Current Location
+            </button>
+            <div id="locationStatus" style="font-size:12px;color:#777;text-align:center;margin-top:-10px;margin-bottom:10px;display:none"></div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+              <div>
+                <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Label</label>
+                <select class="form-control" id="newLabel">
+                  <option value="Home" selected>🏠 Home</option>
+                  <option value="Work">🏢 Work</option>
+                  <option value="Other">📍 Other</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Pincode</label>
+                <input class="form-control" id="newPincode" placeholder="600001"/>
+              </div>
+            </div>
+            <div style="margin-bottom:12px">
+              <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Full Address *</label>
+              <input class="form-control" id="newAddress" placeholder="House no, Street, Area"/>
+            </div>
+            <div style="margin-bottom:12px">
+              <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">City *</label>
+              <input class="form-control" id="newCity" placeholder="City"/>
+            </div>
+            <input type="hidden" id="newLat"/>
+            <input type="hidden" id="newLng"/>
+            <div style="display:flex;gap:8px;margin-top:4px">
+              <button class="btn btn-primary" id="saveAddressBtn">Save Address</button>
+              <button class="btn btn-outline" onclick="document.getElementById('addAddressForm').style.display='none'">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="card" style="margin-bottom:20px">
+          <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">📝 Special Instructions</h3>
+          <textarea class="form-control" id="instructions" rows="2" placeholder="Any special request? (optional)"></textarea>
+        </div>
+      </div>
+
+      <!-- Right: Order Summary -->
+      <div>
+        <div class="card" style="position:sticky;top:80px">
+          <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Order Summary</h3>
+
+          <!-- Price Breakdown — Transparent Pricing ✓ -->
+          <div class="price-breakdown">
+            <div class="price-row"><span>Food subtotal</span><span id="summFoodTotal">₹0</span></div>
+            <div class="price-row" id="discountRow" style="display:none;color:#4caf50">
+              <span>Coupon discount</span><span id="summDiscount">-₹0</span>
+            </div>
+            <div class="price-row"><span>Delivery fee</span><span id="summDelivery">₹30</span></div>
+            <div class="price-row"><span>Platform fee</span><span id="summPlatformFee">₹5</span></div>
+            <div class="price-row">
+              <span id="gstLabelCart">Other charges</span><span id="summGst">₹0</span>
+            </div>
+            <div class="price-row total">
+              <span>Total to pay</span><span id="summTotal" style="color:#ff5722">₹0</span>
+            </div>
+            <div class="price-row" id="walletDeductRow" style="display:none;color:#22c55e">
+              <span>Wallet deduction</span><span id="summWalletDeduct">-₹0</span>
+            </div>
+            <div class="price-row total" id="summPayRow" style="display:none">
+              <span style="color:#333">You pay now</span><span id="summPayNow" style="color:#ff5722;font-size:18px">₹0</span>
+            </div>
+          </div>
+
+          <div id="subSavings" style="display:none;background:#e8f5e9;border-radius:8px;padding:10px;margin-bottom:12px;font-size:13px;color:#2e7d32">
+            💎 Aharam Plus: Free delivery applied!
+          </div>
+
+          <!-- Payment Method -->
+          <div style="margin-bottom:16px">
+            <p style="font-size:14px;font-weight:600;margin-bottom:10px">Payment Method</p>
+            <label class="pay-option" style="border-color:#4caf50;background:#f1f8f1">
+              <input type="radio" name="payMethod" value="cod" checked onchange="updatePaySummary()"/> 💵 Cash on Delivery
+            </label>
+
+            <!-- Wallet toggle — shown only when balance > 0 -->
+            <div id="walletToggleWrap" style="display:none;margin-top:10px;background:#fff8f5;border:1px solid #ffd5c0;border-radius:10px;padding:12px 14px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:18px">💳</span>
+                  <div>
+                    <div style="font-size:14px;font-weight:600">Use Aharam Wallet</div>
+                    <div style="font-size:12px;color:#777">Balance: <strong id="walletBalanceLabel" style="color:#ff5722">₹0</strong></div>
+                  </div>
+                </div>
+                <label style="position:relative;display:inline-block;width:42px;height:24px;cursor:pointer">
+                  <input type="checkbox" id="walletToggle" onchange="updatePaySummary()" style="opacity:0;width:0;height:0"/>
+                  <span id="walletToggleTrack" style="position:absolute;inset:0;background:#ccc;border-radius:24px;transition:.2s"></span>
+                  <span id="walletToggleThumb" style="position:absolute;left:2px;top:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></span>
+                </label>
+              </div>
+              <div id="walletApplyRow" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #ffd5c0">
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+                  <span style="color:#777">Wallet deduction</span>
+                  <span style="color:#22c55e;font-weight:700" id="walletDeductLabel">-₹0</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:13px">
+                  <span style="color:#777">Pay by cash</span>
+                  <span style="font-weight:700" id="codRemainingLabel">₹0</span>
+                </div>
+                <div id="walletFullMsg" style="display:none;margin-top:8px;background:#e8f5e9;border-radius:6px;padding:7px 10px;font-size:12px;color:#2e7d32;font-weight:600">
+                  ✓ Full order covered by wallet — no cash needed!
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-block btn-lg" id="placeOrderBtn">
+            Place Order →
+          </button>
+          <p style="font-size:12px;color:#aaa;text-align:center;margin-top:10px">
+            By placing the order you agree to our Terms of Service
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.pay-option {
+  display:flex;align-items:center;gap:6px;
+  padding:10px 16px;border:1px solid #e0e0e0;border-radius:8px;
+  cursor:pointer;font-size:14px;font-weight:500;transition:all .2s;
+}
+.pay-option:has(input:checked) { border-color:#ff5722;background:#fff3e0; }
+</style>
+
+<script src="../js/api.js"></script>
+<script src="../js/platform.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+// Require login
+if (!Auth.isLoggedIn()) {
+  window.location.href = 'login.html?redirect=' + encodeURIComponent(location.href);
+}
+
+let cartData       = null;
+let selectedAddrId = null;
+let couponDiscount = 0;
+let couponCode     = null;
+let addresses      = [];
+let walletBalance  = 0;
+
+// ── Load Cart ─────────────────────────────────────────────
+async function loadCart() {
+  const res = await Api.cart.get();
+  if (!res?.success || !res.data?.items?.length) {
+    document.getElementById('emptyCart').style.display   = 'block';
+    document.getElementById('cartContent').style.display = 'none';
+    return;
+  }
+
+  cartData = res.data;
+  document.getElementById('emptyCart').style.display   = 'none';
+  document.getElementById('cartContent').style.display = 'block';
+
+  renderCartItems();
+  updateSummary();
+  loadAddresses();
+  loadCoupons();
+
+  document.getElementById('cartRestName').textContent =
+    (cartData.items[0]?.restaurant_name || 'Cart') + ` (${cartData.item_count} items)`;
+}
+
+function renderCartItems() {
+  document.getElementById('cartItemsList').innerHTML = (cartData.items || []).map(item => `
+    <div class="cart-item" style="border-bottom:1px solid #f0f0f0;padding:12px 0">
+      <span class="veg-dot ${item.food_type === 'veg' ? 'veg' : 'non_veg'}"></span>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600">${escHtml(item.name)}</div>
+        <div style="font-size:12px;color:#777">₹${item.price} each</div>
+      </div>
+      <div class="qty-control">
+        <button class="qty-btn" onclick="updateQty(${item.menu_item_id}, ${item.quantity-1})">−</button>
+        <span class="qty-num">${item.quantity}</span>
+        <button class="qty-btn" onclick="updateQty(${item.menu_item_id}, ${item.quantity+1})">+</button>
+      </div>
+      <span style="font-size:14px;font-weight:700;color:#ff5722;min-width:56px;text-align:right">₹${item.subtotal}</span>
+    </div>`).join('');
+}
+
+async function updateQty(menuItemId, qty) {
+  const res = await Api.cart.update({ menu_item_id: menuItemId, quantity: qty });
+  if (res?.success) {
+    if (!res.data?.items?.length) { window.location.reload(); return; }
+    cartData = res.data;
+    renderCartItems();
+    updateSummary();
+    updateCartBadge();
+  }
+}
+
+function calcPlatformFee(food) {
+  const base = window._platformFeeBase ?? 5;
+  return base + Math.floor(food / 100);
+}
+
+function updateSummary() {
+  const food      = parseFloat(cartData.food_total || 0);
+  const freeAbove = window._freeDeliveryAbove ?? 299;
+  const baseFee   = window._baseDeliveryFee   ?? 30;
+
+  // Check Plus free delivery eligibility
+  let delivery = food >= freeAbove ? 0 : baseFee;
+  let plusDeliveryFree = false;
+  if (window._plusSubscriber && window._plusFreeDelivery) {
+    const minOk = !window._plusMinOrder || food >= window._plusMinOrder;
+    if (minOk) { delivery = 0; plusDeliveryFree = true; }
+  }
+
+  const pFee  = calcPlatformFee(food);
+  const gst   = Math.round((food - couponDiscount) * 0.05);
+  const total = Math.max(0, food - couponDiscount + delivery + pFee + gst);
+
+  document.getElementById('summFoodTotal').textContent   = `₹${food.toFixed(0)}`;
+  document.getElementById('summPlatformFee').textContent = `₹${pFee}`;
+  document.getElementById('summGst').textContent         = `₹${gst.toFixed(0)}`;
+  document.getElementById('summTotal').textContent       = `₹${total.toFixed(0)}`;
+
+  const delivEl = document.getElementById('summDelivery');
+  if (delivery === 0) {
+    delivEl.innerHTML = plusDeliveryFree
+      ? 'FREE <span style="background:#ff5722;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:4px">💎 PLUS</span>'
+      : 'FREE';
+  } else {
+    delivEl.textContent = `₹${delivery}`;
+  }
+
+  if (couponDiscount > 0) {
+    document.getElementById('discountRow').style.display = 'flex';
+    document.getElementById('summDiscount').textContent  = `-₹${couponDiscount.toFixed(0)}`;
+  } else {
+    document.getElementById('discountRow').style.display = 'none';
+  }
+}
+
+// ── Addresses ─────────────────────────────────────────────
+async function loadAddresses() {
+  const res = await Api.addresses.list();
+  if (!res?.success) return;
+
+  addresses = res.data || [];
+  renderAddresses();
+}
+
+function renderAddresses() {
+  const el = document.getElementById('addressList');
+  if (!addresses.length) {
+    el.innerHTML = '<p style="font-size:14px;color:#777">No saved addresses.</p>';
+    return;
+  }
+
+  el.innerHTML = addresses.map(addr => `
+    <label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid ${selectedAddrId === addr.id ? '#ff5722' : '#e0e0e0'};border-radius:8px;cursor:pointer;margin-bottom:8px">
+      <input type="radio" name="address" value="${addr.id}" ${selectedAddrId === addr.id || addr.is_default ? 'checked' : ''} onchange="selectedAddrId=${addr.id};document.getElementById('addressList').innerHTML='';renderAddresses()"/>
+      <div>
+        <div style="font-size:14px;font-weight:600">${escHtml(addr.label)}</div>
+        <div style="font-size:13px;color:#777">${escHtml(addr.address)}, ${escHtml(addr.city)} — ${addr.pincode}</div>
+      </div>
+    </label>`).join('');
+
+  if (!selectedAddrId) {
+    const def = addresses.find(a => a.is_default) || addresses[0];
+    if (def) selectedAddrId = def.id;
+  }
+}
+
+document.getElementById('addAddressBtn').addEventListener('click', () => {
+  document.getElementById('addAddressForm').style.display = 'block';
+  document.getElementById('newAddress').value = '';
+  document.getElementById('newCity').value    = '';
+  document.getElementById('newPincode').value = '';
+  document.getElementById('newLat').value     = '';
+  document.getElementById('newLng').value     = '';
+  document.getElementById('newLabel').value   = 'Home';
+  document.getElementById('locationStatus').style.display = 'none';
+});
+
+document.getElementById('useLocationBtn').addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    showToast('Geolocation not supported by your browser.', 'error');
+    return;
+  }
+  const btn    = document.getElementById('useLocationBtn');
+  const status = document.getElementById('locationStatus');
+  btn.textContent  = '⏳ Getting location…';
+  btn.disabled     = true;
+  status.style.display = 'block';
+  status.textContent   = 'Requesting GPS…';
+
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const { latitude: lat, longitude: lng } = pos.coords;
+    document.getElementById('newLat').value = lat;
+    document.getElementById('newLng').value = lng;
+    status.textContent = 'Fetching address from coordinates…';
+
+    try {
+      const r = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      const data = await r.json();
+      const addr = data.address || {};
+
+      const road     = addr.road || addr.pedestrian || addr.neighbourhood || '';
+      const suburb   = addr.suburb || addr.village || addr.hamlet || '';
+      const fullAddr = [road, suburb].filter(Boolean).join(', ');
+      const city     = addr.city || addr.town || addr.county || '';
+      const pincode  = addr.postcode || '';
+
+      document.getElementById('newAddress').value = fullAddr;
+      document.getElementById('newCity').value    = city;
+      document.getElementById('newPincode').value = pincode;
+
+      status.style.color   = '#4caf50';
+      status.textContent   = '✓ Location detected — please verify and save';
+    } catch {
+      status.style.color  = '#f44336';
+      status.textContent  = 'Could not fetch address. Please fill in manually.';
+    }
+
+    btn.innerHTML = '📍 Use My Current Location';
+    btn.disabled  = false;
+  }, err => {
+    status.style.color  = '#f44336';
+    status.textContent  = err.code === 1 ? 'Location permission denied.' : 'Could not get location.';
+    btn.innerHTML = '📍 Use My Current Location';
+    btn.disabled  = false;
+  }, { timeout: 10000 });
+});
+
+document.getElementById('saveAddressBtn').addEventListener('click', async () => {
+  const address = document.getElementById('newAddress').value.trim();
+  const city    = document.getElementById('newCity').value.trim();
+  const pincode = document.getElementById('newPincode').value.trim();
+
+  if (!address || !city) {
+    showToast('Please fill in address and city.', 'error');
+    return;
+  }
+
+  const res = await Api.addresses.create({
+    label:      document.getElementById('newLabel').value || 'Home',
+    address,
+    city,
+    pincode,
+    latitude:   document.getElementById('newLat').value || null,
+    longitude:  document.getElementById('newLng').value || null,
+    is_default: !addresses.length,
+  });
+  if (res?.success) {
+    document.getElementById('addAddressForm').style.display = 'none';
+    loadAddresses();
+    showToast('Address saved!', 'success');
+  } else {
+    showToast(res?.message || 'Failed to save address.', 'error');
+  }
+});
+
+// ── Coupons ───────────────────────────────────────────────
+async function loadCoupons() {
+  const res = await Api.coupons.list(cartData.restaurant_id);
+  if (!res?.success) return;
+  const el = document.getElementById('availableCoupons');
+  el.innerHTML = (res.data || []).slice(0, 4).map(c =>
+    `<button class="btn btn-outline" style="font-size:12px;padding:5px 12px" onclick="document.getElementById('couponInput').value='${c.code}';document.getElementById('couponInput').focus()">${c.code}</button>`
+  ).join('');
+}
+
+async function applyCoupon(code) {
+  code = code || document.getElementById('couponInput').value.trim().toUpperCase();
+  if (!code) return;
+
+  const food = parseFloat(cartData.food_total || 0);
+  const res  = await Api.coupons.apply({
+    code,
+    order_amount:  food,
+    restaurant_id: cartData.restaurant_id,
+  });
+
+  const msg = document.getElementById('couponMsg');
+  if (res?.success) {
+    couponDiscount = res.data.discount_amount;
+    couponCode     = code;
+    const discLabel = res.data.discount_type === 'percent'
+      ? `${res.data.discount_value}% off`
+      : `₹${res.data.discount_value} off`;
+    msg.style.color = '#4caf50';
+    msg.textContent = `✓ ${discLabel} applied (${code}) — ₹${couponDiscount} saved!`;
+    document.getElementById('removeCouponBtn').style.display = 'inline-block';
+    document.getElementById('couponInput').value = code;
+    document.getElementById('couponInput').disabled = true;
+    document.getElementById('applyCouponBtn').disabled = true;
+    updateSummary();
+  } else {
+    couponDiscount = 0;
+    couponCode     = null;
+    msg.style.color = '#f44336';
+    msg.textContent = res?.message || 'Invalid coupon.';
+    document.getElementById('removeCouponBtn').style.display = 'none';
+    updateSummary();
+  }
+}
+
+function removeCoupon() {
+  couponDiscount = 0;
+  couponCode     = null;
+  const msg = document.getElementById('couponMsg');
+  msg.textContent = '';
+  document.getElementById('couponInput').value = '';
+  document.getElementById('couponInput').disabled = false;
+  document.getElementById('applyCouponBtn').disabled = false;
+  document.getElementById('removeCouponBtn').style.display = 'none';
+  updateSummary();
+}
+
+document.getElementById('applyCouponBtn').addEventListener('click', () => applyCoupon());
+document.getElementById('clearCartBtn').addEventListener('click', async () => {
+  if (!confirm('Clear your cart?')) return;
+  await Api.cart.clear();
+  window.location.reload();
+});
+
+// ── Place Order ───────────────────────────────────────────
+document.getElementById('placeOrderBtn').addEventListener('click', async () => {
+  if (!selectedAddrId && !addresses.length) {
+    showToast('Please add a delivery address first.', 'error');
+    return;
+  }
+
+  const addr         = addresses.find(a => a.id === selectedAddrId) || addresses[0];
+  const useWallet    = document.getElementById('walletToggle')?.checked && walletBalance > 0;
+  const orderTotal   = parseFloat(document.getElementById('summTotal').textContent.replace('₹','')) || 0;
+  const walletUse    = useWallet ? Math.min(walletBalance, orderTotal) : 0;
+  const codRemaining = Math.max(0, orderTotal - walletUse);
+
+  // If wallet fully covers the order → payment_method = wallet
+  // If wallet partially covers → payment_method = cod, wallet_amount = partial deduction
+  const payMethod = (useWallet && walletUse >= orderTotal) ? 'wallet' : 'cod';
+
+  const btn       = document.getElementById('placeOrderBtn');
+  btn.disabled    = true;
+  btn.textContent = 'Placing order...';
+
+  const items = (cartData.items || []).map(i => ({
+    menu_item_id: i.menu_item_id,
+    quantity:     i.quantity,
+  }));
+
+  const orderBody = {
+    restaurant_id:        cartData.restaurant_id,
+    items,
+    delivery_address:     `${addr.address}, ${addr.city}, ${addr.pincode}`,
+    payment_method:       payMethod,
+    coupon_code:          couponCode,
+    special_instructions: document.getElementById('instructions').value,
+  };
+  if (useWallet && walletUse > 0) {
+    orderBody.wallet_amount = walletUse;
+  }
+
+  const res = await Api.orders.place(orderBody);
+
+  btn.disabled    = false;
+  btn.textContent = 'Place Order →';
+
+  if (!res?.success) {
+    showToast(res?.message || 'Order failed. Try again.', 'error');
+    return;
+  }
+
+  const { order_id } = res.data;
+
+  const msg = walletUse > 0
+    ? `Order placed! ₹${walletUse.toFixed(0)} deducted from wallet. 🎉`
+    : 'Order placed! 🎉';
+  showToast(msg, 'success');
+  setTimeout(() => window.location.href = `order-track.html?order_id=${order_id}`, 1000);
+});
+
+// ── Wallet toggle UI ─────────────────────────────────────
+function updatePaySummary() {
+  const toggle   = document.getElementById('walletToggle');
+  const track    = document.getElementById('walletToggleTrack');
+  const thumb    = document.getElementById('walletToggleThumb');
+  const applyRow = document.getElementById('walletApplyRow');
+  const fullMsg  = document.getElementById('walletFullMsg');
+
+  if (!toggle) return;
+
+  const on = toggle.checked;
+  track.style.background = on ? '#ff5722' : '#ccc';
+  thumb.style.left       = on ? '20px'   : '2px';
+
+  const orderTotal      = parseFloat(document.getElementById('summTotal').textContent.replace('₹','')) || 0;
+  const walletDeductRow = document.getElementById('walletDeductRow');
+  const summPayRow      = document.getElementById('summPayRow');
+
+  if (!on || walletBalance <= 0) {
+    applyRow.style.display    = 'none';
+    walletDeductRow.style.display = 'none';
+    summPayRow.style.display      = 'none';
+    return;
+  }
+
+  const walletUse = Math.min(walletBalance, orderTotal);
+  const remaining = Math.max(0, orderTotal - walletUse);
+
+  // Update wallet toggle breakdown
+  document.getElementById('walletDeductLabel').textContent  = '-₹' + walletUse.toFixed(2);
+  document.getElementById('codRemainingLabel').textContent  = '₹'  + remaining.toFixed(2);
+  applyRow.style.display       = 'flex';
+  applyRow.style.flexDirection = 'column';
+  fullMsg.style.display        = remaining === 0 ? 'block' : 'none';
+
+  // Update order summary totals
+  document.getElementById('summWalletDeduct').textContent = '-₹' + walletUse.toFixed(0);
+  document.getElementById('summPayNow').textContent       = '₹'  + remaining.toFixed(0);
+  walletDeductRow.style.display = 'flex';
+  summPayRow.style.display      = 'flex';
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Load settings + subscription together, then cart
+window._plusSubscriber    = false;
+window._plusMinOrder      = 0;
+window._plusFreeKm        = null;
+window._plusFreeDelivery  = false;
+
+Promise.all([
+  Api.get('/settings/public'),
+  Auth.isLoggedIn() ? Api.subscription.status() : Promise.resolve(null),
+  Auth.isLoggedIn() ? Api.wallet.get()           : Promise.resolve(null),
+]).then(([r, subRes, walletRes]) => {
+  const d = r?.data || {};
+  if (d.platform_fee_base   !== undefined) window._platformFeeBase   = parseFloat(d.platform_fee_base);
+  if (d.free_delivery_above !== undefined) window._freeDeliveryAbove = parseFloat(d.free_delivery_above);
+  if (d.base_delivery_fee   !== undefined) window._baseDeliveryFee   = parseFloat(d.base_delivery_fee);
+  if (d.gst_label) document.getElementById('gstLabelCart').textContent = d.gst_label;
+
+  if (subRes?.data?.active) {
+    window._plusSubscriber   = true;
+    window._plusFreeDelivery = (d.customer_plan_free_delivery ?? '1') === '1';
+    window._plusMinOrder     = parseFloat(d.customer_plan_min_order || 0);
+    window._plusFreeKm       = d.customer_plan_free_delivery_km ? parseFloat(d.customer_plan_free_delivery_km) : null;
+  }
+
+  // Show wallet toggle if balance > 0
+  if (walletRes?.success && parseFloat(walletRes.data?.balance || 0) > 0) {
+    walletBalance = parseFloat(walletRes.data.balance);
+    document.getElementById('walletToggleWrap').style.display = 'block';
+    document.getElementById('walletBalanceLabel').textContent = '₹' + walletBalance.toFixed(2);
+  }
+
+  loadCart();
+});
+</script>
+</body>
+</html>

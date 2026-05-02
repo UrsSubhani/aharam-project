@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23FF6B2B'/><text x='50' y='72' font-size='65' text-anchor='middle' fill='white' font-family='Arial,sans-serif' font-weight='bold'>A</text></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Profile — Aharam</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    .addr-label-btn { padding:6px 14px; border:1.5px solid #ddd; border-radius:20px; background:#fff; font-size:12px; font-weight:600; cursor:pointer; color:#555; transition:.15s; }
+    .addr-label-btn.active { border-color:#ff5722; background:#fff3e0; color:#ff5722; }
+    .addr-item { border:1.5px solid #f0f0f0; border-radius:12px; padding:14px 16px; margin-bottom:10px; position:relative; }
+    .addr-item.default-addr { border-color:#ff5722; background:#fff8f5; }
+    .addr-default-badge { font-size:10px; font-weight:700; background:#ff5722; color:#fff; padding:2px 8px; border-radius:10px; margin-left:8px; }
+    .addr-actions { display:flex; gap:8px; margin-top:10px; }
+    .addr-actions button { font-size:12px; padding:5px 12px; border-radius:8px; border:1.5px solid #ddd; background:#fff; cursor:pointer; font-weight:600; color:#555; }
+    .addr-actions button.set-default { border-color:#ff5722; color:#ff5722; }
+    .addr-actions button.delete-btn  { border-color:#f44336; color:#f44336; }
+  </style>
+</head>
+<body>
+
+<header class="header"><div class="container header-inner">
+  <a href="../index.html" class="logo">🍽 <span data-pname>Aharam</span></a>
+  <nav class="header-nav">
+    <a href="orders.html" class="nav-link">My Orders</a>
+    <a href="cart.html" class="nav-link">🛒 Cart</a>
+    <div id="authSection"></div>
+    <div id="userSection" style="display:none">
+      <div class="user-menu">
+        <button class="btn btn-outline" id="userMenuBtn">👤 <span id="userName">Me</span> ▾</button>
+        <div class="dropdown" id="userDropdown">
+          <a href="profile.html">Profile</a>
+          <a href="orders.html">My Orders</a>
+          <a href="#" id="logoutBtn">Logout</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+</div></header>
+
+<div class="page-header"><div class="container">
+  <h1 class="page-title">My Profile</h1>
+</div></div>
+
+<div class="container" style="padding-bottom:60px;max-width:600px">
+
+  <!-- Profile Info Card -->
+  <div class="card" style="margin-bottom:20px">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+      <div style="width:64px;height:64px;background:#ff5722;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;font-weight:700" id="avatarInitial">?</div>
+      <div>
+        <div style="font-size:18px;font-weight:700" id="profileName">Loading...</div>
+        <div style="font-size:13px;color:#777" id="profileEmail"></div>
+      </div>
+    </div>
+
+    <div id="profileMsg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px"></div>
+
+    <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;color:#333">Edit Details</h3>
+    <div style="margin-bottom:14px">
+      <label class="form-label">Full Name</label>
+      <input type="text" class="form-control" id="editName" placeholder="Your full name"/>
+    </div>
+    <div style="margin-bottom:14px">
+      <label class="form-label">Phone Number</label>
+      <input type="tel" class="form-control" id="editPhone" placeholder="10-digit mobile number" maxlength="10" inputmode="numeric" pattern="[0-9]{10}"/>
+    </div>
+    <div style="margin-bottom:4px">
+      <label class="form-label">Email Address</label>
+      <input type="email" class="form-control" id="editEmail" disabled style="background:#f5f5f5;color:#aaa;cursor:not-allowed"/>
+    </div>
+    <div style="font-size:12px;color:#aaa;margin-bottom:16px">Email cannot be changed</div>
+    <button class="btn btn-primary" id="saveProfileBtn" onclick="saveProfile()">Save Changes</button>
+  </div>
+
+  <!-- Aharam Plus Card -->
+  <div class="card" id="plusCard" style="margin-bottom:20px;display:none"></div>
+
+  <!-- Saved Addresses Card -->
+  <div class="card" style="margin-bottom:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h3 style="font-size:14px;font-weight:700;color:#333;margin:0">📍 Saved Addresses</h3>
+      <button class="btn btn-outline" style="font-size:12px;padding:6px 14px" onclick="showAddressForm()">+ Add New</button>
+    </div>
+
+    <div id="addrMsg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px"></div>
+    <div id="addressList"><div style="text-align:center;color:#aaa;padding:20px;font-size:14px">Loading addresses…</div></div>
+
+    <!-- Add / Edit Form -->
+    <div id="addrForm" style="display:none;margin-top:16px;border-top:1px solid #f0f0f0;padding-top:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-size:14px;font-weight:700" id="addrFormTitle">Add New Address</div>
+        <button onclick="hideAddressForm()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#aaa;line-height:1">×</button>
+      </div>
+
+      <!-- Label tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:14px" id="labelTabs">
+        <button class="addr-label-btn active" data-label="Home" onclick="selectLabel(this)">🏠 Home</button>
+        <button class="addr-label-btn" data-label="Work" onclick="selectLabel(this)">💼 Work</button>
+        <button class="addr-label-btn" data-label="Other" onclick="selectLabel(this)">📌 Other</button>
+      </div>
+
+      <!-- GPS button -->
+      <button id="gpsBtn" onclick="useGPS()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:#fff3e0;border:1.5px dashed #ff5722;border-radius:10px;color:#ff5722;font-weight:600;font-size:13px;cursor:pointer;margin-bottom:14px">
+        <span id="gpsIcon">📍</span> <span id="gpsTxt">Use Current Location</span>
+      </button>
+
+      <div style="margin-bottom:12px">
+        <label class="form-label">Full Address <span style="color:#ff5722">*</span></label>
+        <textarea class="form-control" id="addrLine" rows="2" placeholder="House/Flat No., Street, Landmark…" style="resize:none"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <label class="form-label">City <span style="color:#ff5722">*</span></label>
+          <input type="text" class="form-control" id="addrCity" placeholder="City"/>
+        </div>
+        <div>
+          <label class="form-label">Pincode <span style="color:#ff5722">*</span></label>
+          <input type="text" class="form-control" id="addrPin" placeholder="6-digit pincode" maxlength="6"/>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+        <input type="checkbox" id="addrDefault" style="width:16px;height:16px;accent-color:#ff5722"/>
+        <label for="addrDefault" style="font-size:13px;color:#555;cursor:pointer">Set as default address</label>
+      </div>
+      <input type="hidden" id="addrId" value=""/>
+      <input type="hidden" id="addrLat" value=""/>
+      <input type="hidden" id="addrLng" value=""/>
+      <button class="btn btn-primary btn-block" id="saveAddrBtn" onclick="saveAddress()">Save Address</button>
+    </div>
+  </div>
+
+  <!-- Change Password Card -->
+  <div class="card">
+    <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;color:#333">Change Password</h3>
+    <div id="pwdMsg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px"></div>
+    <div style="margin-bottom:14px">
+      <label class="form-label">Current Password</label>
+      <div style="position:relative">
+        <input type="password" class="form-control" id="currentPwd" placeholder="Enter current password" autocomplete="new-password" style="padding-right:44px"/>
+        <button type="button" onclick="togglePwd('currentPwd',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:#aaa;line-height:1;padding:0">👁</button>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label class="form-label">New Password</label>
+      <div style="position:relative">
+        <input type="password" class="form-control" id="newPwd" placeholder="Min 6 characters" style="padding-right:44px"/>
+        <button type="button" onclick="togglePwd('newPwd',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:#aaa;line-height:1;padding:0">👁</button>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label class="form-label">Confirm New Password</label>
+      <div style="position:relative">
+        <input type="password" class="form-control" id="confirmPwd" placeholder="Repeat new password" style="padding-right:44px"/>
+        <button type="button" onclick="togglePwd('confirmPwd',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:#aaa;line-height:1;padding:0">👁</button>
+      </div>
+    </div>
+    <button class="btn btn-outline" id="savePwdBtn" onclick="savePassword()">Update Password</button>
+  </div>
+
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/platform.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+if (!Auth.isLoggedIn()) window.location.href = 'login.html';
+
+function togglePwd(inputId, btn) {
+  const input = document.getElementById(inputId);
+  const show  = input.type === 'password';
+  input.type  = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁';
+  btn.style.color = show ? '#ff5722' : '#aaa';
+}
+
+async function loadProfile() {
+  const res = await Api.auth.me();
+  if (!res?.success) return;
+  const u = res.data;
+
+  document.getElementById('profileName').textContent    = u.name || '';
+  document.getElementById('profileEmail').textContent   = u.email || '';
+  document.getElementById('avatarInitial').textContent  = (u.name || '?')[0].toUpperCase();
+  document.getElementById('editName').value             = u.name || '';
+  document.getElementById('editPhone').value            = u.phone || '';
+  document.getElementById('editEmail').value            = u.email || '';
+
+  Auth.updateUI(u);
+}
+
+function showMsg(elId, msg, success) {
+  const el = document.getElementById(elId);
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = success ? '#e8f5e9' : '#ffebee';
+  el.style.color      = success ? '#2e7d32' : '#c62828';
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+
+document.getElementById('editPhone').addEventListener('input', function() {
+  this.value = this.value.replace(/\D/g, '').slice(0, 10);
+});
+
+async function saveProfile() {
+  const name  = document.getElementById('editName').value.trim();
+  const phone = document.getElementById('editPhone').value.trim();
+  if (!name) { showMsg('profileMsg', 'Name cannot be empty.', false); return; }
+  if (phone && !/^[0-9]{10}$/.test(phone)) { showMsg('profileMsg', 'Enter a valid 10-digit mobile number.', false); return; }
+
+  const btn = document.getElementById('saveProfileBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const res = await Api.request('PUT', '/me', { name, phone });
+  btn.disabled = false; btn.textContent = 'Save Changes';
+
+  if (res?.success) {
+    showMsg('profileMsg', 'Profile updated successfully!', true);
+    document.getElementById('profileName').textContent   = res.data.name;
+    document.getElementById('avatarInitial').textContent = res.data.name[0].toUpperCase();
+    const stored = Auth.getUser();
+    if (stored) Auth.save(Auth.getToken(), { ...stored, name: res.data.name, phone: res.data.phone });
+  } else {
+    showMsg('profileMsg', res?.message || 'Update failed.', false);
+  }
+}
+
+async function savePassword() {
+  const current = document.getElementById('currentPwd').value;
+  const newPwd  = document.getElementById('newPwd').value;
+  const confirm = document.getElementById('confirmPwd').value;
+
+  if (!current || !newPwd) { showMsg('pwdMsg', 'Fill in all password fields.', false); return; }
+  if (newPwd.length < 6)   { showMsg('pwdMsg', 'New password must be at least 6 characters.', false); return; }
+  if (newPwd !== confirm)  { showMsg('pwdMsg', 'Passwords do not match.', false); return; }
+
+  const btn = document.getElementById('savePwdBtn');
+  btn.disabled = true; btn.textContent = 'Updating…';
+
+  const res = await Api.request('PUT', '/me', { current_password: current, new_password: newPwd });
+  btn.disabled = false; btn.textContent = 'Update Password';
+
+  if (res?.success) {
+    showMsg('pwdMsg', 'Password changed successfully!', true);
+    document.getElementById('currentPwd').value = '';
+    document.getElementById('newPwd').value = '';
+    document.getElementById('confirmPwd').value = '';
+  } else {
+    showMsg('pwdMsg', res?.message || 'Failed to update password.', false);
+  }
+}
+
+async function loadPlusCard() {
+  const [subRes, settingsRes] = await Promise.all([
+    Api.subscription.status(),
+    Api.get('/settings/public'),
+  ]);
+
+  const s    = settingsRes?.data || {};
+  const sub  = subRes?.data;
+  const card = document.getElementById('plusCard');
+  card.style.display = 'block';
+
+  // If plan is disabled by admin, hide the card entirely (unless already subscribed)
+  const planActive  = (s.customer_plan_active ?? '1') === '1';
+  if (!planActive && !sub?.active) { card.style.display = 'none'; return; }
+
+  const planName     = s.customer_plan_name    || 'Aharam Plus';
+  const planPrice    = s.customer_plan_price   || 99;
+  const planBenefits = s.customer_plan_benefits|| '';
+  const freeKm    = s.customer_plan_free_delivery_km;
+  const minOrder  = s.customer_plan_min_order;
+
+  // Delivery line
+  const deliveryLine = freeKm
+    ? `Free delivery within ${freeKm} km`
+    : ((s.customer_plan_free_delivery ?? '1') === '1' ? 'Free delivery on all orders' : null);
+
+  // Min order line
+  const minOrderLine = minOrder ? `Minimum order amount ₹${minOrder}` : null;
+
+  const adminLines = planBenefits
+    .split(/\n|\+/)
+    .map(b => b.trim())
+    .filter(b => b.length > 0);
+
+  const benefitLines = [deliveryLine, minOrderLine, ...adminLines].filter(Boolean);
+
+  const benefitsHtml = (color) => benefitLines
+    .map(b => `<div style="display:flex;align-items:center;gap:8px;font-size:14px;color:${color}"><span style="color:#4caf50;font-weight:700">✓</span> ${b}</div>`)
+    .join('');
+
+  if (sub?.active) {
+    const expiry = sub.expires_at
+      ? new Date(sub.expires_at).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })
+      : '';
+    card.innerHTML = `
+      <div style="background:linear-gradient(135deg,#ff5722,#ff8a50);border-radius:12px;padding:20px;color:#fff;margin:-20px -20px 0;border-radius:12px 12px 0 0">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:11px;font-weight:600;opacity:.8;letter-spacing:1px;text-transform:uppercase">Active Plan</div>
+            <div style="font-size:22px;font-weight:800;margin-top:2px">💎 ${planName}</div>
+          </div>
+          <div style="background:rgba(255,255,255,.2);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700">Active ✓</div>
+        </div>
+      </div>
+      <div style="padding-top:16px">
+        <div style="font-size:13px;color:#777;margin-bottom:12px">Your benefits:</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+          ${benefitsHtml('#333')}
+        </div>
+        <div style="background:#fff8f5;border-radius:8px;padding:10px 14px;font-size:13px;color:#ff5722;font-weight:600">
+          Valid until: ${expiry}
+        </div>
+      </div>`;
+  } else {
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="font-size:32px">💎</div>
+        <div>
+          <div style="font-size:17px;font-weight:700">${planName}</div>
+          <div style="font-size:13px;color:#777">Unlock premium benefits</div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div style="font-size:22px;font-weight:800;color:#ff5722">₹${planPrice}</div>
+          <div style="font-size:11px;color:#aaa">/month</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+        ${benefitsHtml('#555')}
+      </div>
+      <div id="plusMsg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px"></div>
+      <button class="btn btn-primary btn-block" id="subscribePlusBtn" onclick="subscribePlus()" style="background:linear-gradient(135deg,#ff5722,#ff8a50);border:none">
+        Get ${planName} — ₹${planPrice}/month
+      </button>`;
+  }
+}
+
+async function subscribePlus() {
+  const btn = document.getElementById('subscribePlusBtn');
+  btn.disabled = true; btn.textContent = 'Processing…';
+  const res = await Api.subscription.subscribe();
+  if (res?.success) {
+    loadPlusCard();
+  } else {
+    const msg = document.getElementById('plusMsg');
+    msg.textContent = res?.message || 'Subscription failed.';
+    msg.style.display = 'block';
+    msg.style.background = '#ffebee';
+    msg.style.color = '#c62828';
+    btn.disabled = false;
+  }
+}
+
+// ── Address Management ──────────────────────────────────────
+let selectedLabel = 'Home';
+
+async function loadAddresses() {
+  const res = await Api.addresses.list();
+  const list = document.getElementById('addressList');
+  if (!res?.success || !res.data?.length) {
+    list.innerHTML = '<div style="text-align:center;color:#aaa;padding:20px;font-size:13px">No saved addresses yet.</div>';
+    return;
+  }
+  list.innerHTML = res.data.map(a => `
+    <div class="addr-item ${a.is_default ? 'default-addr' : ''}">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span style="font-size:13px;font-weight:700;color:#333">${labelIcon(a.label)} ${a.label || 'Home'}</span>
+        ${a.is_default ? '<span class="addr-default-badge">Default</span>' : ''}
+      </div>
+      <div style="font-size:13px;color:#555;line-height:1.5">${escHtml(a.address)}</div>
+      <div style="font-size:12px;color:#888;margin-top:2px">${escHtml(a.city)} — ${escHtml(a.pincode)}</div>
+      <div class="addr-actions">
+        <button onclick="editAddress(${JSON.stringify(a).replace(/"/g,'&quot;')})">✏️ Edit</button>
+        ${!a.is_default ? `<button class="set-default" onclick="setDefault(${a.id})">⭐ Set Default</button>` : ''}
+        <button class="delete-btn" onclick="deleteAddress(${a.id})">🗑 Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function labelIcon(label) {
+  return label === 'Work' ? '💼' : label === 'Other' ? '📌' : '🏠';
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function selectLabel(btn) {
+  document.querySelectorAll('.addr-label-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedLabel = btn.dataset.label;
+}
+
+function showAddressForm(reset = true) {
+  if (reset) {
+    document.getElementById('addrFormTitle').textContent = 'Add New Address';
+    document.getElementById('addrId').value  = '';
+    document.getElementById('addrLat').value = '';
+    document.getElementById('addrLng').value = '';
+    document.getElementById('addrLine').value = '';
+    document.getElementById('addrCity').value = '';
+    document.getElementById('addrPin').value  = '';
+    document.getElementById('addrDefault').checked = false;
+    selectedLabel = 'Home';
+    document.querySelectorAll('.addr-label-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.label === 'Home');
+    });
+    resetGpsBtn();
+  }
+  document.getElementById('addrForm').style.display = 'block';
+  document.getElementById('addrForm').scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function hideAddressForm() {
+  document.getElementById('addrForm').style.display = 'none';
+}
+
+function editAddress(a) {
+  document.getElementById('addrFormTitle').textContent = 'Edit Address';
+  document.getElementById('addrId').value  = a.id;
+  document.getElementById('addrLat').value = a.latitude  || '';
+  document.getElementById('addrLng').value = a.longitude || '';
+  document.getElementById('addrLine').value = a.address  || '';
+  document.getElementById('addrCity').value = a.city     || '';
+  document.getElementById('addrPin').value  = a.pincode  || '';
+  document.getElementById('addrDefault').checked = !!a.is_default;
+  selectedLabel = a.label || 'Home';
+  document.querySelectorAll('.addr-label-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.label === selectedLabel);
+  });
+  resetGpsBtn();
+  showAddressForm(false);
+}
+
+async function saveAddress() {
+  const addr    = document.getElementById('addrLine').value.trim();
+  const city    = document.getElementById('addrCity').value.trim();
+  const pincode = document.getElementById('addrPin').value.trim();
+  if (!addr || !city || !pincode) {
+    showAddrMsg('Please fill in address, city and pincode.', false); return;
+  }
+
+  const btn = document.getElementById('saveAddrBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const payload = {
+    label:      selectedLabel,
+    address:    addr,
+    city:       city,
+    pincode:    pincode,
+    latitude:   document.getElementById('addrLat').value || null,
+    longitude:  document.getElementById('addrLng').value || null,
+    is_default: document.getElementById('addrDefault').checked ? 1 : 0,
+  };
+
+  const id  = document.getElementById('addrId').value;
+  const res = id
+    ? await Api.addresses.update(id, payload)
+    : await Api.addresses.create(payload);
+
+  btn.disabled = false; btn.textContent = 'Save Address';
+
+  if (res?.success) {
+    showAddrMsg(id ? 'Address updated!' : 'Address added!', true);
+    hideAddressForm();
+    loadAddresses();
+  } else {
+    showAddrMsg(res?.message || 'Failed to save address.', false);
+  }
+}
+
+async function deleteAddress(id) {
+  if (!confirm('Delete this address?')) return;
+  const res = await Api.addresses.delete(id);
+  if (res?.success) loadAddresses();
+  else showAddrMsg('Failed to delete.', false);
+}
+
+async function setDefault(id) {
+  const res = await Api.addresses.setDefault(id);
+  if (res?.success) loadAddresses();
+}
+
+function showAddrMsg(msg, ok) {
+  const el = document.getElementById('addrMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = ok ? '#e8f5e9' : '#ffebee';
+  el.style.color      = ok ? '#2e7d32' : '#c62828';
+  setTimeout(() => el.style.display = 'none', 3500);
+}
+
+function resetGpsBtn() {
+  document.getElementById('gpsIcon').textContent = '📍';
+  document.getElementById('gpsTxt').textContent  = 'Use Current Location';
+  document.getElementById('gpsBtn').disabled = false;
+}
+
+async function useGPS() {
+  if (!navigator.geolocation) {
+    showAddrMsg('GPS not supported on this browser.', false); return;
+  }
+  const btn = document.getElementById('gpsBtn');
+  btn.disabled = true;
+  document.getElementById('gpsIcon').textContent = '⏳';
+  document.getElementById('gpsTxt').textContent  = 'Fetching location…';
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      document.getElementById('addrLat').value = lat;
+      document.getElementById('addrLng').value = lng;
+
+      // Reverse geocode via OpenStreetMap Nominatim
+      try {
+        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+        const d = await r.json();
+        const addr = d.address || {};
+        const line = [addr.house_number, addr.road, addr.neighbourhood, addr.suburb]
+          .filter(Boolean).join(', ');
+        const city    = addr.city || addr.town || addr.village || addr.county || '';
+        const pincode = addr.postcode || '';
+        if (line)    document.getElementById('addrLine').value = line;
+        if (city)    document.getElementById('addrCity').value = city;
+        if (pincode) document.getElementById('addrPin').value  = pincode;
+        document.getElementById('gpsIcon').textContent = '✅';
+        document.getElementById('gpsTxt').textContent  = 'Location detected';
+      } catch {
+        document.getElementById('gpsIcon').textContent = '📍';
+        document.getElementById('gpsTxt').textContent  = 'Location set (fill details)';
+      }
+      btn.disabled = false;
+    },
+    (err) => {
+      resetGpsBtn();
+      showAddrMsg('Could not get location. Please allow GPS access.', false);
+    },
+    { timeout: 10000 }
+  );
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  loadProfile();
+  loadAddresses();
+  await loadPlusCard();
+  if (location.hash === '#plus') {
+    document.getElementById('plusCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+});
+</script>
+</body>
+</html>

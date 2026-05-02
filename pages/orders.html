@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23FF6B2B'/><text x='50' y='72' font-size='65' text-anchor='middle' fill='white' font-family='Arial,sans-serif' font-weight='bold'>A</text></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Orders — Aharam</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<header class="header"><div class="container header-inner">
+  <a href="../index.html" class="logo">🍽 <span data-pname>Aharam</span></a>
+  <nav class="header-nav">
+    <a href="cart.html" class="nav-link">🛒 Cart</a>
+    <div id="authSection"></div>
+    <div id="userSection" style="display:none">
+      <div class="user-menu">
+        <button class="btn btn-outline" id="userMenuBtn">👤 <span id="userName">Me</span> ▾</button>
+        <div class="dropdown" id="userDropdown">
+          <a href="profile.html">Profile</a>
+          <a href="#" id="logoutBtn">Logout</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+</div></header>
+
+<div class="page-header"><div class="container">
+  <h1 class="page-title">My Orders</h1>
+</div></div>
+
+<div class="container" style="padding-bottom:60px;max-width:760px">
+  <div id="ordersLoading" class="loading-spinner">Loading your orders...</div>
+  <div id="ordersEmpty" style="display:none;text-align:center;padding:60px 0">
+    <div style="font-size:64px;margin-bottom:16px">📦</div>
+    <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">No orders yet</h2>
+    <p style="color:#777;margin-bottom:24px">Your order history will appear here</p>
+    <a href="../index.html" class="btn btn-primary">Order Now</a>
+  </div>
+  <div id="ordersList"></div>
+  <div style="text-align:center;margin-top:24px">
+    <button class="btn btn-outline" id="loadMoreBtn" style="display:none">Load More</button>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/platform.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+if (!Auth.isLoggedIn()) window.location.href = 'login.html';
+
+let currentPage = 1;
+
+const statusLabels = {
+  pending:    { label: 'Pending',    cls: 'status-pending'   },
+  confirmed:  { label: 'Confirmed',  cls: 'status-confirmed' },
+  preparing:  { label: 'Preparing',  cls: 'status-preparing' },
+  ready:      { label: 'Ready',      cls: 'status-confirmed' },
+  picked:     { label: 'Picked Up',  cls: 'status-confirmed' },
+  on_the_way: { label: 'On the Way', cls: 'status-confirmed' },
+  delivered:  { label: 'Delivered',  cls: 'status-delivered' },
+  cancelled:  { label: 'Cancelled',  cls: 'status-cancelled' },
+  refunded:   { label: 'Refunded',   cls: 'status-cancelled' },
+};
+
+function renderOrder(order) {
+  const s   = statusLabels[order.status] || { label: order.status, cls: '' };
+  const date = new Date(order.created_at).toLocaleString('en-IN', { dateStyle:'medium', timeStyle:'short' });
+
+  return `
+    <div class="order-card">
+      <div class="order-card-header">
+        <div>
+          <div style="font-size:16px;font-weight:700">${escHtml(order.restaurant_name)}</div>
+          <div class="order-number">${order.order_number} • ${date}</div>
+        </div>
+        <div class="order-status ${s.cls}">${s.label}</div>
+      </div>
+      <div style="font-size:13px;color:#777;margin-bottom:12px">
+        ${order.item_count} item${order.item_count>1?'s':''} • ₹${order.total_amount}
+        • ${order.payment_method.toUpperCase()}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline" style="font-size:13px;padding:7px 14px" onclick="viewOrder(${order.id})">View Details</button>
+        ${order.status === 'delivered' ? `<button class="btn btn-primary" style="font-size:13px;padding:7px 14px" onclick="reorder(${order.id})">🔄 Reorder</button>` : ''}
+        ${['pending','confirmed'].includes(order.status) ? `<button class="btn btn-outline" style="font-size:13px;padding:7px 14px;color:#f44336;border-color:#f44336" onclick="cancelOrder(${order.id})">Cancel</button>` : ''}
+        ${['confirmed','preparing','ready','picked','on_the_way'].includes(order.status) ? `<button class="btn btn-primary" style="font-size:13px;padding:7px 14px" onclick="trackOrder(${order.id})">📍 Track</button>` : ''}
+      </div>
+    </div>`;
+}
+
+async function loadOrders(reset = true) {
+  if (reset) { currentPage = 1; document.getElementById('ordersList').innerHTML = ''; }
+
+  const res = await Api.orders.history(currentPage);
+  document.getElementById('ordersLoading').style.display = 'none';
+
+  const orders = res?.data || [];
+  if (!orders.length && currentPage === 1) {
+    document.getElementById('ordersEmpty').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('ordersList').insertAdjacentHTML('beforeend', orders.map(renderOrder).join(''));
+
+  const hasNext = res?.meta?.has_next;
+  document.getElementById('loadMoreBtn').style.display = hasNext ? 'inline-flex' : 'none';
+}
+
+async function viewOrder(id) {
+  const [res, settingsRes] = await Promise.all([Api.orders.show(id), Api.get('/settings/public')]);
+  if (!res?.success) { showToast('Could not load order.', 'error'); return; }
+  const o   = res.data;
+  const gstLabel = settingsRes?.data?.gst_label || 'Other charges';
+  const fmt = v => `₹${parseFloat(v||0).toFixed(2)}`;
+
+  const statusColors = {
+    pending:'#ff9800', confirmed:'#2196f3', preparing:'#ff5722',
+    ready:'#9c27b0', picked:'#00bcd4', on_the_way:'#3f51b5',
+    delivered:'#4caf50', cancelled:'#f44336', refunded:'#607d8b'
+  };
+  const statusColor = statusColors[o.status] || '#777';
+
+  const itemsHtml = (o.items||[]).map(item => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5">
+      <div style="display:flex;gap:10px;align-items:center;flex:1;min-width:0">
+        ${item.item_image
+          ? `<img src="${item.item_image}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0"/>`
+          : `<div style="width:40px;height:40px;border-radius:8px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🍽</div>`}
+        <div style="min-width:0">
+          <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(item.name)}</div>
+          <div style="font-size:12px;color:#aaa">₹${parseFloat(item.price).toFixed(2)} × ${item.quantity}</div>
+        </div>
+      </div>
+      <div style="font-size:14px;font-weight:700;flex-shrink:0;margin-left:12px">${fmt(item.subtotal)}</div>
+    </div>`).join('');
+
+  const discount = Math.max(parseFloat(o.discount_amount||0), parseFloat(o.coupon_discount||0));
+  const walletUsed = parseFloat(o.wallet_amount||0);
+  const cashToPay  = Math.max(0, parseFloat(o.total_amount) - walletUsed);
+
+  document.getElementById('orderModal')?.remove();
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="orderModal" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:0"
+         onclick="if(event.target===this)this.remove()">
+      <div style="background:#fff;border-radius:20px 20px 0 0;width:min(520px,100%);max-height:90vh;overflow-y:auto;padding:24px 20px 32px;animation:slideUp .25s ease">
+        <!-- Header -->
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px">
+          <div>
+            <div style="font-size:18px;font-weight:800">#${escHtml(o.order_number)}</div>
+            <div style="font-size:12px;color:#aaa;margin-top:2px">${escHtml(o.restaurant_name||'')} · ${new Date(o.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;background:${statusColor}22;color:${statusColor};text-transform:capitalize">${o.status}</span>
+            <button onclick="document.getElementById('orderModal').remove()" style="background:#f5f5f5;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:18px;color:#777;display:flex;align-items:center;justify-content:center;flex-shrink:0">×</button>
+          </div>
+        </div>
+
+        <!-- Items -->
+        <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:8px">Items Ordered</div>
+        <div style="margin-bottom:16px">${itemsHtml}</div>
+
+        <!-- Price breakdown -->
+        <div style="background:#fafafa;border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;flex-direction:column;gap:8px;font-size:13px">
+          <div style="display:flex;justify-content:space-between;color:#555"><span>Item Total</span><span>${fmt(o.food_total)}</span></div>
+          ${discount>0?`<div style="display:flex;justify-content:space-between;color:#4caf50"><span>Discount</span><span>− ${fmt(discount)}</span></div>`:''}
+          <div style="display:flex;justify-content:space-between;color:#555"><span>Delivery Fee</span><span>${parseFloat(o.delivery_fee)===0?'<span style="color:#4caf50;font-weight:600">FREE</span>':fmt(o.delivery_fee)}</span></div>
+          <div style="display:flex;justify-content:space-between;color:#555"><span>Platform Fee</span><span>${fmt(o.platform_fee)}</span></div>
+          <div style="display:flex;justify-content:space-between;color:#555"><span>${escHtml(gstLabel)}</span><span>${fmt(o.gst_amount)}</span></div>
+          ${walletUsed>0?`<div style="display:flex;justify-content:space-between;color:#4caf50"><span>Wallet Used</span><span>− ${fmt(walletUsed)}</span></div>`:''}
+          <div style="display:flex;justify-content:space-between;font-weight:800;font-size:15px;border-top:1.5px solid #eee;padding-top:10px;margin-top:2px">
+            <span>Total</span><span style="color:#ff5722">${fmt(o.total_amount)}</span>
+          </div>
+        </div>
+
+        <!-- Payment badge -->
+        ${o.payment_method==='cod' && cashToPay>0 ? `
+        <div style="background:#fff3e0;border:1.5px solid #ff5722;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
+          <div><div style="font-size:11px;font-weight:700;color:#e65100">💵 CASH ON DELIVERY</div><div style="font-size:12px;color:#777;margin-top:2px">Amount to pay delivery partner</div></div>
+          <div style="font-size:22px;font-weight:800;color:#ff5722">${fmt(cashToPay)}</div>
+        </div>` : walletUsed>=parseFloat(o.total_amount) ? `
+        <div style="background:#e8f5e9;border:1.5px solid #4caf50;border-radius:10px;padding:12px 16px;margin-bottom:16px;text-align:center;font-weight:700;color:#2e7d32;font-size:13px">
+          💳 Fully paid via Wallet — No cash needed
+        </div>` : ''}
+
+        <!-- Delivery address -->
+        <div style="display:flex;gap:10px;align-items:flex-start;background:#f9f9f9;border-radius:10px;padding:12px 14px;margin-bottom:20px">
+          <span style="font-size:18px;flex-shrink:0">📍</span>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:2px">Delivery Address</div>
+            <div style="font-size:13px;color:#555;line-height:1.5">${escHtml(o.delivery_address_text)}</div>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div style="display:flex;gap:10px">
+          ${['confirmed','preparing','ready','picked','on_the_way'].includes(o.status)
+            ? `<button onclick="document.getElementById('orderModal').remove();trackOrder(${o.id})" style="flex:1;padding:12px;background:#ff5722;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">📍 Track Order</button>`
+            : ''}
+          ${o.status==='delivered'
+            ? `<button onclick="document.getElementById('orderModal').remove();reorder(${o.id})" style="flex:1;padding:12px;background:#ff5722;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">🔄 Reorder</button>`
+            : ''}
+          <button onclick="document.getElementById('orderModal').remove()" style="flex:1;padding:12px;background:#f5f5f5;color:#555;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Close</button>
+        </div>
+      </div>
+    </div>
+    <style>@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>`);
+}
+
+async function reorder(id) {
+  const res = await Api.orders.reorder(id);
+  if (res?.success) {
+    showToast('Items added to cart!', 'success');
+    setTimeout(() => window.location.href='cart.html', 1000);
+  } else {
+    showToast(res?.message || 'Reorder failed.', 'error');
+  }
+}
+
+async function cancelOrder(id) {
+  if (!confirm('Cancel this order?')) return;
+  const res = await Api.orders.cancel(id, 'Customer cancelled');
+  if (res?.success) {
+    showToast('Order cancelled.', 'success');
+    loadOrders();
+  } else {
+    showToast(res?.message || 'Cannot cancel.', 'error');
+  }
+}
+
+function trackOrder(id) { window.location.href = `order-track.html?order_id=${id}`; }
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+document.getElementById('loadMoreBtn')?.addEventListener('click', () => {
+  currentPage++;
+  loadOrders(false);
+});
+
+loadOrders();
+</script>
+</body>
+</html>

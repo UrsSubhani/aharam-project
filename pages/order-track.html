@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23FF6B2B'/><text x='50' y='72' font-size='65' text-anchor='middle' fill='white' font-family='Arial,sans-serif' font-weight='bold'>A</text></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Track Order — Aharam</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    #mapBox { display:none; border-radius:12px; overflow:hidden; margin-bottom:20px; box-shadow:0 2px 12px rgba(0,0,0,.1); }
+    #deliveryMap { height:280px; width:100%; }
+    #mapLabel { padding:8px 14px; background:#fff; font-size:12px; color:#777; border-top:1px solid #f0f0f0; display:flex; align-items:center; gap:6px; }
+    #mapLabel span { color:#ff5722; font-weight:600; }
+  </style>
+</head>
+<body>
+
+<header class="header"><div class="container header-inner">
+  <a href="../index.html" class="logo">🍽 <span data-pname>Aharam</span></a>
+  <a href="orders.html" class="btn btn-outline">← My Orders</a>
+</div></header>
+
+<div class="container" style="max-width:600px;padding:32px 16px">
+  <h1 style="font-size:24px;font-weight:700;margin-bottom:8px">Track Order</h1>
+  <p id="orderNumEl" style="color:#777;margin-bottom:28px">Loading...</p>
+
+  <!-- Status Tracker -->
+  <div class="status-tracker" id="statusTracker">
+    <div class="status-step">
+      <div class="status-dot" id="dot-pending">📋</div>
+      <div class="status-label">Ordered</div>
+    </div>
+    <div class="status-step">
+      <div class="status-dot" id="dot-confirmed">✅</div>
+      <div class="status-label">Confirmed</div>
+    </div>
+    <div class="status-step">
+      <div class="status-dot" id="dot-preparing">👨‍🍳</div>
+      <div class="status-label">Preparing</div>
+    </div>
+    <div class="status-step">
+      <div class="status-dot" id="dot-picked">🛵</div>
+      <div class="status-label">Picked Up</div>
+    </div>
+    <div class="status-step">
+      <div class="status-dot" id="dot-delivered">🏠</div>
+      <div class="status-label">Delivered</div>
+    </div>
+  </div>
+
+  <!-- Status Message -->
+  <div id="statusMsg" class="card" style="margin-bottom:20px;background:#fff3e0;border:1px solid #ff5722;text-align:center;padding:20px">
+    <div style="font-size:28px;margin-bottom:8px" id="statusIcon">⏳</div>
+    <div style="font-size:18px;font-weight:700" id="statusText">Loading...</div>
+    <div style="font-size:13px;color:#777;margin-top:4px" id="statusSub"></div>
+  </div>
+
+  <!-- Chat with Restaurant -->
+  <div id="chatCard" class="card" style="display:none;margin-bottom:20px;padding:16px 20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div>
+        <div style="font-weight:700;font-size:14px">🍽 <span id="chatRestName">Restaurant</span></div>
+        <div style="font-size:12px;color:#777;margin-top:2px">Have a question about your order?</div>
+      </div>
+      <a id="chatWhatsappBtn" href="#" target="_blank"
+         style="display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;
+                font-size:13px;font-weight:700;padding:9px 16px;border-radius:24px;
+                text-decoration:none;white-space:nowrap;flex-shrink:0">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        Chat
+      </a>
+    </div>
+  </div>
+
+  <!-- Delivery Partner Info -->
+  <div id="partnerCard" class="card" style="display:none;margin-bottom:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">🛵 Your Delivery Partner</h3>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:48px;height:48px;background:#ff5722;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff">🛵</div>
+      <div>
+        <div style="font-weight:600" id="partnerName">Partner</div>
+        <div style="font-size:13px;color:#777" id="partnerPhone"></div>
+      </div>
+      <a id="callPartnerBtn" class="btn btn-outline" style="margin-left:auto">📞 Call</a>
+    </div>
+    <div style="margin-top:12px;padding:10px;background:#f5f5f5;border-radius:8px;font-size:13px;color:#555">
+      🔑 Delivery OTP: <strong id="deliveryOtp" style="font-size:16px;letter-spacing:3px;color:#ff5722">------</strong>
+      <br/><span style="font-size:12px;color:#999">Show this to the delivery partner</span>
+    </div>
+  </div>
+
+  <!-- Order Summary -->
+  <div id="orderSummaryCard" class="card" style="margin-bottom:20px;display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <h3 style="font-size:15px;font-weight:700;margin:0">🧾 Order Summary</h3>
+      <span id="summaryRestName" style="font-size:12px;color:#777"></span>
+    </div>
+
+    <!-- Items list -->
+    <div id="summaryItems" style="border-bottom:1px solid #f0f0f0;padding-bottom:12px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px"></div>
+
+    <!-- Price breakdown -->
+    <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+      <div style="display:flex;justify-content:space-between;color:#555">
+        <span>Item Total</span><span id="sumFoodTotal">—</span>
+      </div>
+      <div id="sumDiscountRow" style="display:none;justify-content:space-between;color:#4caf50">
+        <span>Discount</span><span id="sumDiscount">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;color:#555">
+        <span>Delivery Fee</span><span id="sumDeliveryFee">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;color:#555">
+        <span>Platform Fee</span><span id="sumPlatformFee">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;color:#555">
+        <span id="gstLabelTrack">Other charges</span><span id="sumGst">—</span>
+      </div>
+      <div id="sumWalletRow" style="display:none;justify-content:space-between;color:#4caf50">
+        <span>Wallet Used</span><span id="sumWallet">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;border-top:1.5px solid #f0f0f0;padding-top:10px;margin-top:4px">
+        <span>Total</span><span id="sumTotal" style="color:#ff5722">—</span>
+      </div>
+    </div>
+
+    <!-- Cash to pay banner (COD only) -->
+    <div id="cashPayBanner" style="display:none;margin-top:16px;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(255,87,34,.15)">
+      <div style="background:linear-gradient(135deg,#ff5722,#ff8a50);padding:12px 16px;display:flex;align-items:center;gap:8px">
+        <span style="font-size:18px">💵</span>
+        <span style="font-size:12px;font-weight:800;color:#fff;letter-spacing:.8px;text-transform:uppercase">Cash on Delivery</span>
+      </div>
+      <div style="background:#fff8f6;border:1.5px solid #ffccbc;border-top:none;border-radius:0 0 14px 14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#333">Amount to keep ready</div>
+          <div style="font-size:12px;color:#888;margin-top:2px">Hand over to your delivery partner</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:26px;font-weight:800;color:#ff5722;line-height:1" id="cashPayAmount">—</div>
+          <div style="font-size:11px;color:#aaa;margin-top:2px">cash</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wallet paid banner -->
+    <div id="walletPaidBanner" style="display:none;margin-top:16px;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(76,175,80,.15)">
+      <div style="background:linear-gradient(135deg,#4caf50,#81c784);padding:12px 16px;display:flex;align-items:center;gap:8px">
+        <span style="font-size:18px">💳</span>
+        <span style="font-size:12px;font-weight:800;color:#fff;letter-spacing:.8px;text-transform:uppercase">Fully Paid via Wallet</span>
+      </div>
+      <div style="background:#f1f8f1;border:1.5px solid #c8e6c9;border-top:none;border-radius:0 0 14px 14px;padding:12px 16px;text-align:center;font-size:13px;color:#2e7d32;font-weight:600">
+        ✅ No cash needed — enjoy your meal!
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Map -->
+  <div id="mapBox" class="card" style="padding:0">
+    <div id="deliveryMap"></div>
+    <div id="mapLabel">🛵 <span id="mapPartnerName">Delivery Partner</span> is on the way — live location</div>
+  </div>
+
+  <!-- Refresh note -->
+  <p id="refreshNote" style="text-align:center;font-size:13px;color:#aaa;display:none">
+    Auto-refreshing every 8 seconds...
+    <button style="background:none;border:none;color:#ff5722;cursor:pointer;font-size:13px" onclick="poll()">Refresh now</button>
+  </p>
+
+  <!-- Review Section (after delivery) -->
+  <div id="reviewSection" style="display:none" class="card">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">⭐ Rate your experience</h3>
+    <div style="display:flex;gap:6px;margin-bottom:12px" id="starRating">
+      <button style="font-size:28px;background:none;border:none;cursor:pointer" onclick="setRating(1)" class="star-btn" data-val="1">☆</button>
+      <button style="font-size:28px;background:none;border:none;cursor:pointer" onclick="setRating(2)" class="star-btn" data-val="2">☆</button>
+      <button style="font-size:28px;background:none;border:none;cursor:pointer" onclick="setRating(3)" class="star-btn" data-val="3">☆</button>
+      <button style="font-size:28px;background:none;border:none;cursor:pointer" onclick="setRating(4)" class="star-btn" data-val="4">☆</button>
+      <button style="font-size:28px;background:none;border:none;cursor:pointer" onclick="setRating(5)" class="star-btn" data-val="5">☆</button>
+    </div>
+    <textarea class="form-control" id="reviewText" rows="2" placeholder="Any feedback? (optional)"></textarea>
+    <button class="btn btn-primary" style="margin-top:12px" id="submitReviewBtn">Submit Review</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/platform.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+const orderId = parseInt(new URLSearchParams(location.search).get('order_id') || '0');
+if (!orderId) window.location.href = 'orders.html';
+
+let pollInterval = null;
+let delivered    = false;
+let reviewGiven  = false;
+let selectedRating = 0;
+
+let map = null;
+let partnerMarker = null;
+let destMarker = null;
+let routeLine = null;
+let animFrame = null;
+
+const riderIcon = L.divIcon({
+  className: '',
+  html: '<div style="font-size:30px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))">🛵</div>',
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+});
+
+const destIcon = L.divIcon({
+  className: '',
+  html: '<div style="font-size:28px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))">📍</div>',
+  iconSize: [28, 28],
+  iconAnchor: [14, 28],
+});
+
+const statusFlow = ['pending', 'confirmed', 'preparing', 'ready', 'picked', 'on_the_way', 'delivered'];
+const statusDotMap = {
+  pending:    'dot-pending',
+  confirmed:  'dot-confirmed',
+  preparing:  'dot-preparing',
+  ready:      'dot-preparing',
+  picked:     'dot-picked',
+  on_the_way: 'dot-picked',
+  delivered:  'dot-delivered',
+};
+
+const statusMessages = {
+  pending:    { icon: '📋', text: 'Order Received',           sub: 'Waiting for restaurant to confirm your order...' },
+  confirmed:  { icon: '✅', text: 'Order Accepted!',          sub: 'Restaurant confirmed your order and will start preparing soon.' },
+  preparing:  { icon: '👨‍🍳', text: 'Being Prepared',          sub: 'Your food is being freshly cooked!' },
+  ready:      { icon: '📦', text: 'Ready for Pickup!',        sub: 'Your order is packed. Delivery partner is heading to the restaurant.' },
+  picked:     { icon: '🛵', text: 'Picked Up!',               sub: 'Your delivery partner has collected your food.' },
+  on_the_way: { icon: '🚀', text: 'On the Way!',              sub: 'Your food is on its way to you. Hang tight!' },
+  delivered:  { icon: '🎉', text: 'Delivered!',               sub: 'Enjoy your meal! 😋' },
+  cancelled:  { icon: '❌', text: 'Order Cancelled',          sub: 'Your order has been cancelled.' },
+};
+
+async function poll() {
+  const res = await Api.orders.status(orderId);
+  if (!res?.success) return;
+  const data = res.data;
+
+  document.getElementById('orderNumEl').textContent = `Order #${data.order_number || orderId}`;
+
+  updateStatusUI(data.status);
+  await updatePartnerInfo(data);
+  updateChatCard(data);
+
+  if (data.status === 'delivered' && !delivered) {
+    delivered = true;
+    clearInterval(pollInterval);
+    pollInterval = null;
+    document.getElementById('refreshNote').style.display = 'none';
+    showReviewSection();
+  }
+
+  if (data.status === 'cancelled') {
+    clearInterval(pollInterval);
+    document.getElementById('refreshNote').style.display = 'none';
+  }
+}
+
+function updateStatusUI(status) {
+  const msg = statusMessages[status] || { icon: '⏳', text: status, sub: '' };
+
+  document.getElementById('statusIcon').textContent = msg.icon;
+  document.getElementById('statusText').textContent = msg.text;
+  document.getElementById('statusSub').textContent  = msg.sub;
+
+  // Update dots
+  const doneStatuses = statusFlow.slice(0, statusFlow.indexOf(status) + 1);
+  Object.keys(statusDotMap).forEach(s => {
+    const dotId  = statusDotMap[s];
+    const dotEl  = document.getElementById(dotId);
+    if (!dotEl) return;
+    if (doneStatuses.includes(s))   { dotEl.classList.add('done');   dotEl.classList.remove('active'); }
+    else if (s === status)           { dotEl.classList.add('active'); dotEl.classList.remove('done');   }
+    else                             { dotEl.classList.remove('done','active'); }
+  });
+}
+
+async function updatePartnerInfo(data) {
+  const partnerCard = document.getElementById('partnerCard');
+  if (data.partner_name && !['pending','confirmed','preparing','cancelled'].includes(data.status) || (data.partner_name && data.status === 'ready')) {
+    partnerCard.style.display = 'block';
+    document.getElementById('partnerName').textContent   = data.partner_name;
+    document.getElementById('partnerPhone').textContent  = data.partner_phone || '';
+    document.getElementById('callPartnerBtn').href       = `tel:${data.partner_phone}`;
+    document.getElementById('deliveryOtp').textContent   = data.delivery_otp || '------';
+  }
+  const showMap = data.partner_lat && data.partner_lng &&
+    ['picked','on_the_way'].includes(data.status);
+  if (showMap) {
+    await updateMap(
+      parseFloat(data.partner_lat), parseFloat(data.partner_lng),
+      data.dest_lat  ? parseFloat(data.dest_lat)  : null,
+      data.dest_lng  ? parseFloat(data.dest_lng)  : null,
+      data.partner_name
+    );
+  } else {
+    document.getElementById('mapBox').style.display = 'none';
+  }
+}
+
+function animateMarker(marker, fromLat, fromLng, toLat, toLng, durationMs) {
+  if (animFrame) cancelAnimationFrame(animFrame);
+  const start = performance.now();
+  function step(now) {
+    const t = Math.min((now - start) / durationMs, 1);
+    const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease-in-out
+    marker.setLatLng([
+      fromLat + (toLat - fromLat) * ease,
+      fromLng + (toLng - fromLng) * ease,
+    ]);
+    if (t < 1) animFrame = requestAnimationFrame(step);
+  }
+  animFrame = requestAnimationFrame(step);
+}
+
+async function fetchRoute(rLat, rLng, dLat, dLng) {
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${rLng},${rLat};${dLng},${dLat}?overview=full&geometries=geojson`;
+    const res = await fetch(url);
+    const json = await res.json();
+    return json?.routes?.[0]?.geometry?.coordinates ?? null;
+  } catch { return null; }
+}
+
+function drawRoute(coords) {
+  if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+  if (!coords || coords.length < 2) return;
+  const latlngs = coords.map(([lng, lat]) => [lat, lng]);
+  routeLine = L.polyline(latlngs, {
+    color: '#ff5722', weight: 4, opacity: 0.85,
+  }).addTo(map);
+}
+
+async function updateMap(rLat, rLng, dLat, dLng, name) {
+  const mapBox = document.getElementById('mapBox');
+  mapBox.style.display = 'block';
+  document.getElementById('mapPartnerName').textContent = name || 'Delivery Partner';
+
+  if (!map) {
+    const center = dLat ? [(rLat+dLat)/2, (rLng+dLng)/2] : [rLat, rLng];
+    map = L.map('deliveryMap', { zoomControl: true, scrollWheelZoom: false })
+            .setView(center, 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors', maxZoom: 19,
+    }).addTo(map);
+
+    partnerMarker = L.marker([rLat, rLng], { icon: riderIcon })
+      .bindPopup(name || 'Delivery Partner').addTo(map);
+
+    if (dLat && dLng) {
+      destMarker = L.marker([dLat, dLng], { icon: destIcon })
+        .bindPopup('Your delivery location').addTo(map);
+      const coords = await fetchRoute(rLat, rLng, dLat, dLng);
+      if (coords) {
+        drawRoute(coords);
+        map.fitBounds(routeLine.getBounds(), { padding: [40, 40] });
+      } else {
+        map.fitBounds([[rLat, rLng], [dLat, dLng]], { padding: [40, 40] });
+      }
+    }
+  } else {
+    const prev = partnerMarker.getLatLng();
+    const moved = Math.abs(prev.lat - rLat) > 0.00001 || Math.abs(prev.lng - rLng) > 0.00001;
+    if (moved) {
+      animateMarker(partnerMarker, prev.lat, prev.lng, rLat, rLng, 3000);
+      if (dLat && dLng) {
+        // Refresh road route after marker finishes moving
+        setTimeout(async () => {
+          const coords = await fetchRoute(rLat, rLng, dLat, dLng);
+          if (coords) drawRoute(coords);
+        }, 3000);
+      }
+    }
+  }
+}
+
+function showReviewSection() {
+  document.getElementById('reviewSection').style.display = 'block';
+  document.getElementById('reviewSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function setRating(n) {
+  selectedRating = n;
+  document.querySelectorAll('.star-btn').forEach(btn => {
+    btn.textContent = parseInt(btn.dataset.val) <= n ? '⭐' : '☆';
+  });
+}
+
+document.getElementById('submitReviewBtn')?.addEventListener('click', async () => {
+  if (!selectedRating) { showToast('Please select a rating.', 'error'); return; }
+  if (reviewGiven)      return;
+  reviewGiven = true;
+
+  const res = await Api.reviews.create({
+    order_id:    orderId,
+    food_rating: selectedRating,
+    review_text: document.getElementById('reviewText').value,
+  });
+
+  if (res?.success) {
+    document.getElementById('reviewSection').innerHTML = '<div style="text-align:center;padding:20px"><div style="font-size:36px">🙏</div><p style="font-weight:700;margin-top:8px">Thank you for your feedback!</p></div>';
+  } else {
+    showToast(res?.message || 'Review failed.', 'error');
+  }
+});
+
+function updateChatCard(data) {
+  const card = document.getElementById('chatCard');
+  if (!data.restaurant_whatsapp || data.status === 'delivered' || data.status === 'cancelled') {
+    card.style.display = 'none';
+    return;
+  }
+  document.getElementById('chatRestName').textContent = data.restaurant_name || 'Restaurant';
+  const msg = encodeURIComponent(`Hi! I have a query about my order #${data.order_number}`);
+  document.getElementById('chatWhatsappBtn').href = `https://wa.me/${data.restaurant_whatsapp}?text=${msg}`;
+  card.style.display = 'block';
+}
+
+// ── Load order summary once ───────────────────────────────
+async function loadOrderSummary() {
+  const [res, settingsRes] = await Promise.all([Api.orders.show(orderId), Api.get('/settings/public')]);
+  if (!res?.success) return;
+  const o = res.data;
+  const gstLabel = settingsRes?.data?.gst_label || 'Other charges';
+  document.getElementById('gstLabelTrack').textContent = gstLabel;
+
+  document.getElementById('summaryRestName').textContent = o.restaurant_name || '';
+
+  // Items
+  const items = o.items || [];
+  document.getElementById('summaryItems').innerHTML = items.map(item => `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+      <div style="display:flex;gap:8px;align-items:flex-start;flex:1;min-width:0">
+        ${item.item_image
+          ? `<img src="${item.item_image}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;flex-shrink:0"/>`
+          : `<div style="width:36px;height:36px;border-radius:6px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🍽</div>`}
+        <div style="min-width:0">
+          <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(item.name)}</div>
+          <div style="font-size:12px;color:#aaa">x${item.quantity}</div>
+        </div>
+      </div>
+      <div style="font-size:13px;font-weight:700;flex-shrink:0">₹${parseFloat(item.subtotal).toFixed(2)}</div>
+    </div>`).join('');
+
+  // Pricing breakdown
+  const fmt = v => `₹${parseFloat(v||0).toFixed(2)}`;
+  document.getElementById('sumFoodTotal').textContent    = fmt(o.food_total);
+  document.getElementById('sumDeliveryFee').textContent  = parseFloat(o.delivery_fee) === 0 ? 'FREE' : fmt(o.delivery_fee);
+  document.getElementById('sumPlatformFee').textContent  = fmt(o.platform_fee);
+  document.getElementById('sumGst').textContent          = fmt(o.gst_amount);
+  document.getElementById('sumTotal').textContent        = fmt(o.total_amount);
+
+  const discount = Math.max(parseFloat(o.discount_amount||0), parseFloat(o.coupon_discount||0));
+  if (discount > 0) {
+    document.getElementById('sumDiscountRow').style.display = 'flex';
+    document.getElementById('sumDiscount').textContent = `- ${fmt(discount)}`;
+  }
+
+  const walletUsed = parseFloat(o.wallet_amount || 0);
+  if (walletUsed > 0) {
+    document.getElementById('sumWalletRow').style.display = 'flex';
+    document.getElementById('sumWallet').textContent = `- ${fmt(walletUsed)}`;
+  }
+
+  // Cash payment banner
+  const cashToPay = Math.max(0, parseFloat(o.total_amount) - walletUsed);
+  if (o.payment_method === 'cod' || o.payment_method === 'wallet' && cashToPay > 0) {
+    if (cashToPay > 0) {
+      document.getElementById('cashPayBanner').style.display = 'block';
+      document.getElementById('cashPayAmount').textContent   = `₹${cashToPay.toFixed(2)}`;
+    } else {
+      document.getElementById('walletPaidBanner').style.display = 'block';
+    }
+  }
+
+  document.getElementById('orderSummaryCard').style.display = 'block';
+}
+
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Start polling — single init, always start interval for active orders
+const activeStatuses = ['pending','confirmed','preparing','ready','picked','on_the_way'];
+
+async function initTracking() {
+  await Promise.all([poll(), loadOrderSummary()]);
+  if (!delivered) {
+    document.getElementById('refreshNote').style.display = 'block';
+    pollInterval = setInterval(poll, 8000);
+  }
+}
+
+initTracking();
+</script>
+</body>
+</html>

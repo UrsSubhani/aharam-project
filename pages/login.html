@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23FF6B2B'/><text x='50' y='72' font-size='65' text-anchor='middle' fill='white' font-family='Arial,sans-serif' font-weight='bold'>A</text></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — Aharam</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<div class="auth-container">
+  <div class="auth-box">
+    <div class="auth-logo">🍽 <span data-pname>Aharam</span></div>
+
+    <!-- Tab switcher: Login / Register -->
+    <div class="tab-nav">
+      <button class="tab-btn active" id="tabLogin">Login</button>
+      <button class="tab-btn" id="tabForgot">Forgot Password</button>
+    </div>
+
+    <!-- ── LOGIN FORM ─────────────────────────────────────── -->
+    <form id="loginForm">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-control" id="loginEmail" placeholder="you@example.com" required/>
+        <div class="form-error" id="loginEmailErr"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-control" id="loginPassword" placeholder="Min 8 characters" required/>
+        <div class="form-error" id="loginPasswordErr"></div>
+      </div>
+      <div id="loginError" class="form-error" style="margin-bottom:12px"></div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginBtn">Login</button>
+    </form>
+
+    <!-- ── FORGOT PASSWORD FORM ───────────────────────────── -->
+    <form id="forgotForm" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Registered Email</label>
+        <input type="email" class="form-control" id="forgotEmail" placeholder="you@example.com" required/>
+      </div>
+      <div id="forgotMsg" class="form-error" style="margin-bottom:12px"></div>
+      <button type="submit" class="btn btn-primary btn-block">Send OTP</button>
+    </form>
+
+    <!-- ── RESET PASSWORD FORM ────────────────────────────── -->
+    <form id="resetForm" style="display:none">
+      <p style="margin-bottom:16px;font-size:14px;color:#777">Enter the OTP sent to your email and set a new password.</p>
+      <div class="form-group">
+        <input type="text" class="form-control" id="resetOtp" placeholder="6-digit OTP" required/>
+      </div>
+      <div class="form-group">
+        <input type="password" class="form-control" id="resetPwd" placeholder="New password (min 8 chars)" required/>
+      </div>
+      <div id="resetMsg" class="form-error" style="margin-bottom:12px"></div>
+      <button type="submit" class="btn btn-primary btn-block">Reset Password</button>
+    </form>
+
+    <div class="auth-footer">
+      Don't have an account? <a href="register.html">Sign up free</a>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/platform.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Redirect if already logged in
+  if (Auth.isLoggedIn()) {
+    window.location.href = '../index.html';
+    return;
+  }
+
+  // Show expired session message
+  if (new URLSearchParams(location.search).get('expired')) {
+    document.getElementById('loginError').textContent = 'Your session expired. Please login again.';
+  }
+
+  // Tab switching
+  document.getElementById('tabLogin').addEventListener('click', () => {
+    setTab('login');
+  });
+  document.getElementById('tabForgot').addEventListener('click', () => {
+    setTab('forgot');
+  });
+
+  function setTab(tab) {
+    document.getElementById('loginForm').style.display  = tab === 'login'  ? 'block' : 'none';
+    document.getElementById('forgotForm').style.display = tab === 'forgot' ? 'block' : 'none';
+    document.getElementById('resetForm').style.display  = 'none';
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tab === 'login' ? 'tabLogin' : 'tabForgot').classList.add('active');
+  }
+
+  // ── Login ─────────────────────────────────────────────
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('loginBtn');
+    const errEl = document.getElementById('loginError');
+    errEl.textContent = '';
+
+    btn.disabled     = true;
+    btn.textContent  = 'Logging in...';
+
+    const res = await Api.auth.login({
+      email:    document.getElementById('loginEmail').value.trim(),
+      password: document.getElementById('loginPassword').value,
+    });
+
+    btn.disabled     = false;
+    btn.textContent  = 'Login';
+
+    if (res?.success) {
+      Auth.save(res.data.token, res.data.user);
+      const redirect = new URLSearchParams(location.search).get('redirect');
+      window.location.href = redirect || '../index.html';
+    } else {
+      errEl.textContent = res?.message || 'Login failed.';
+    }
+  });
+
+  // ── Forgot Password ───────────────────────────────────
+  let forgotEmail = '';
+  document.getElementById('forgotForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    forgotEmail = document.getElementById('forgotEmail').value.trim();
+    const msg   = document.getElementById('forgotMsg');
+
+    const res = await Api.auth.forgotPwd({ email: forgotEmail });
+    if (res?.success) {
+      document.getElementById('forgotForm').style.display = 'none';
+      document.getElementById('resetForm').style.display  = 'block';
+      msg.textContent = '';
+    } else {
+      msg.style.color = 'red';
+      msg.textContent = res?.message || 'Error.';
+    }
+  });
+
+  // ── Reset Password ────────────────────────────────────
+  document.getElementById('resetForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('resetMsg');
+
+    const res = await Api.auth.resetPwd({
+      email:        forgotEmail,
+      otp:          document.getElementById('resetOtp').value.trim(),
+      new_password: document.getElementById('resetPwd').value,
+    });
+
+    if (res?.success) {
+      showToast('Password reset! Please login.', 'success');
+      setTimeout(() => setTab('login'), 1500);
+    } else {
+      msg.style.color = 'red';
+      msg.textContent = res?.message || 'Reset failed.';
+    }
+  });
+});
+</script>
+</body>
+</html>

@@ -5,7 +5,9 @@
  * Automatically attaches JWT token from localStorage.
  */
 
-const API_BASE = 'https://aharam.in/backend-api';
+const API_BASE = window.location.hostname === 'localhost'
+  ? 'http://localhost/aharam/backend-api'
+  : 'https://aharam.in/backend-api';
 
 const Api = {
   /**
