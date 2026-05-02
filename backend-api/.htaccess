@@ -12,7 +12,8 @@ RewriteEngine On
 
 # Set base path if API lives in a subdirectory
 # Local: RewriteBase /aharam/backend-api/
-RewriteBase /backend/
+# Production (server): RewriteBase /backend-api/
+# RewriteBase not needed — works without it on both environments
 
 # ── Security headers ──────────────────────────────────────────
 <IfModule mod_headers.c>
